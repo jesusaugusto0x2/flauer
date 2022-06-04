@@ -1,11 +1,11 @@
-import { Wrapper, Title } from './components'
-import './App.css'
-
+import { Wrapper, Title, Image } from './components'
+import Sunflower from './assets/sunflower.gif'
 
 const App = () => {
   return (
     <Wrapper>
       <Title />
+      <Image source={Sunflower} />
     </Wrapper>
   );
 }
