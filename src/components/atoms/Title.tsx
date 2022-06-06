@@ -1,12 +1,17 @@
-import React from 'react'
+import React, { ReactNode } from 'react'
 import styled from 'styled-components'
 
 const StyledTitle = styled.h1`
-  text-transform: uppercase;
+  padding: 0 12px;
+  text-align: center;
+  color: #7ca5f3;
+  margin: 0;
 `
 
-const Title: React.FC = () => {
-  return <StyledTitle>te amo flur 😍❤️</StyledTitle>
+interface TitleProps {
+  children: ReactNode
 }
+
+const Title: React.FC<TitleProps> = ({ children }) => <StyledTitle>{children}</StyledTitle>
 
 export default Title

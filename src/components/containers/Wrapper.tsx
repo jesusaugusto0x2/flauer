@@ -1,25 +1,18 @@
 import React, { ReactNode } from 'react'
 import styled from 'styled-components'
-import FlowerMark from '../../assets/flowermark.png'
-import Petals from '../../assets/falling_petals.gif'
+import Cloud from '../../assets/cloud.gif'
 
 const WrapperContainer = styled.div`
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  height: calc(100vh - 50px);
-  border: 25px solid pink;
-  -moz-border-image: url(${FlowerMark});
-  -webkit-border-image: url(${FlowerMark});
-  -o-border-image: url(${FlowerMark});
-  border-image: url(${FlowerMark});
-  border-image-slice: 180;
+  height: calc(100vh);
   border-image-repeat: round;
-  background-color: #fcfaff;
-  background-image: url(${Petals});
+  // background-image: url(${Cloud});
   background-repeat: repeat;
-  background-size: 100 100;
+  background-size: 130px;
+  opacity: 0.85;
 `
 
 interface WrapperProps {
