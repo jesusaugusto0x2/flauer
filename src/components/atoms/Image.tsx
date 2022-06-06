@@ -9,7 +9,7 @@ const StyledImage = styled.img<{ width: number; height: number }>`
 interface ImageProps {
   width?: number
   height?: number
-  source: any
+  source: string
 }
 
 const DEFAULT_IMAGE_SIZE = 100
