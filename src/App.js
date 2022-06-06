@@ -7,7 +7,7 @@ const App = () => {
       <Title />
       <Image source={Sunflower} />
     </Wrapper>
-  );
+  )
 }
 
-export default App;
+export default App

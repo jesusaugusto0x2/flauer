@@ -1,5 +1,5 @@
-import React, { ReactNode } from "react"
-import styled from 'styled-components';
+import React, { ReactNode } from 'react'
+import styled from 'styled-components'
 
 const WrapperContainer = styled.div`
   display: flex;
@@ -7,9 +7,10 @@ const WrapperContainer = styled.div`
   justify-content: center;
   align-items: center;
   height: 100vh;
+  border: 5px solid red;
 `
 
-interface WrapperProps  {
+interface WrapperProps {
   children: ReactNode
 }
 
