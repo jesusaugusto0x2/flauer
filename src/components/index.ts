@@ -1,5 +1,6 @@
 // Atomic components
 export { default as Title } from './atoms/Title'
+export { default as HiddenLetter } from './atoms/HiddenLetter'
 export { default as Image } from './atoms/Image'
 
 // Molecule components

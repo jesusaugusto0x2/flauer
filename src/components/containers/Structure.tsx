@@ -31,7 +31,7 @@ const Structure: React.FC = () => (
     <ImageContainer>
       <Image source={Cloud} />
     </ImageContainer>
-    <Title>Every flower has a meaning</Title>
+    <Title>Every set of flowers might have a meaning!</Title>
     <PuzzleWord word={FLOWER_WORD} />
   </StructureContainer>
 )

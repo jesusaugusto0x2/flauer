@@ -1,5 +1,17 @@
 export const FLOWER_WORD = {
-  F: ['Flower', 'Fascinating', 'Fabulous'],
+  F: [
+    'Flower',
+    'Fascinating',
+    'Fabulous',
+    'Funny',
+    'Fresh',
+    'Fairness',
+    'Faithful',
+    'Fanciful',
+    'Fantasy',
+    'Forgiving',
+    'Fulfilling',
+  ],
   L: [
     'Loyal',
     'Lovable',

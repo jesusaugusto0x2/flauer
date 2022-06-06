@@ -1,6 +1,6 @@
 import React from 'react'
 import styled from 'styled-components'
-import { Image } from '../index'
+import { HiddenLetter } from '../index'
 import BlueFlower from '../../assets/blue_flowers.gif'
 
 const PuzzleWordContainer = styled.div`
@@ -16,7 +16,7 @@ interface PuzzleWordContainerProps {
 const PuzzleWord: React.FC<PuzzleWordContainerProps> = ({ word }) => (
   <PuzzleWordContainer>
     {Object.keys(word).map((letterItem: string) => (
-      <Image key={letterItem} source={BlueFlower} width={75} height={75} />
+      <HiddenLetter key={letterItem} letter={letterItem} words={word[letterItem]} />
     ))}
   </PuzzleWordContainer>
 )
