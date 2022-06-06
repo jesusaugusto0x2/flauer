@@ -1,6 +1,7 @@
 import React, { ReactNode } from 'react'
 import styled from 'styled-components'
-import Mark from '../../assets/flowermark.png'
+import FlowerMark from '../../assets/flowermark.png'
+import Petals from '../../assets/falling_petals.gif'
 
 const WrapperContainer = styled.div`
   display: flex;
@@ -9,12 +10,16 @@ const WrapperContainer = styled.div`
   align-items: center;
   height: calc(100vh - 50px);
   border: 25px solid pink;
-  -moz-border-image: url(${Mark});
-  -webkit-border-image: url(${Mark});
-  -o-border-image: url(${Mark});
-  border-image: url(${Mark});
+  -moz-border-image: url(${FlowerMark});
+  -webkit-border-image: url(${FlowerMark});
+  -o-border-image: url(${FlowerMark});
+  border-image: url(${FlowerMark});
   border-image-slice: 180;
   border-image-repeat: round;
+  background-color: #fcfaff;
+  background-image: url(${Petals});
+  background-repeat: repeat;
+  background-size: 100 100;
 `
 
 interface WrapperProps {
