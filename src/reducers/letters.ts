@@ -10,7 +10,7 @@ interface LetterState {
 // Define the initial state using that type
 const initialState: LetterState = {
   value: '',
-  words: []
+  words: [],
 }
 
 export const letterSlice = createSlice({

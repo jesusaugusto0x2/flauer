@@ -3,7 +3,7 @@ import letterReducer from '../reducers/letters'
 
 export const store = configureStore({
   reducer: {
-    letter: letterReducer
+    letter: letterReducer,
   },
 })
 

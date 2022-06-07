@@ -3,7 +3,6 @@ import { Wrapper, Structure } from './components'
 import { store } from './store'
 import { Provider } from 'react-redux'
 
-
 const App: React.FC = () => (
   <Provider store={store}>
     <Wrapper>
