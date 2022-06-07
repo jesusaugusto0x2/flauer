@@ -61,12 +61,12 @@ const CloudSelector: React.FC = () => {
 
   useEffect(() => {
     const countingTimer = setTimeout(() => {
-      if (words.length && count < words.length && loading) {
+      if (words.length && count < words.length - 1 && loading) {
         setCount((prevState) => prevState + 1)
       } else {
-        setCount(0)
+        setCount(Math.floor(Math.random() * words.length))
       }
-    }, 100)
+    }, 50)
 
     return () => {
       clearTimeout(countingTimer)
@@ -94,7 +94,7 @@ const CloudSelector: React.FC = () => {
         )}
       </PureCloudContainer>
       <SelectionContainer>
-        <AttributeDisplay>{value ? words[count] : <>&nbsp;</>}</AttributeDisplay>
+        <AttributeDisplay>{words.length ? words[count] : <>&nbsp;</>}</AttributeDisplay>
       </SelectionContainer>
     </CloudSelectorContainer>
   )

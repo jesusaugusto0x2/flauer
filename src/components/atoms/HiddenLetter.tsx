@@ -2,11 +2,11 @@ import React from 'react'
 import { Image } from '../index'
 import styled from 'styled-components'
 import BlueFlower from '../../assets/blue_flowers.gif'
-import { setValue } from '../../reducers/letters'
-import { useAppDispatch } from '../../hooks/contexts'
+import { setValue, getFullLetterState } from '../../reducers/letters'
+import { useAppDispatch, useAppSelector } from '../../hooks/contexts'
 
-const HiddenLetterContainer = styled.div`
-  cursor: pointer;
+const HiddenLetterContainer = styled.div<{ $isLoading: boolean }>`
+  cursor: ${(props) => (props.$isLoading ? 'wait' : 'cursor')};
   margin: 0 5px;
   display: flex;
   justify-content: center;
@@ -24,14 +24,18 @@ interface LetterProps {
 }
 
 const HiddenLetter: React.FC<LetterProps> = ({ letter, words }) => {
+  const { loading } = useAppSelector((state) => getFullLetterState(state))
+
   const dispatch = useAppDispatch()
 
   const handleClick = () => {
+    if (loading) return
+
     dispatch(setValue({ value: letter, words, loading: true }))
   }
 
   return (
-    <HiddenLetterContainer onClick={handleClick}>
+    <HiddenLetterContainer onClick={handleClick} $isLoading={loading}>
       <Image source={BlueFlower} />
     </HiddenLetterContainer>
   )
