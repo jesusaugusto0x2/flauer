@@ -3,9 +3,9 @@ import styled from 'styled-components'
 import { HiddenLetter } from '../index'
 
 const PuzzleWordContainer = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: grid;
+  grid-auto-flow: column;
+  grid-template-columns: repeat(4, minmax(80px, 200px));
 `
 
 interface PuzzleWordContainerProps {

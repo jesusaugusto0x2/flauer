@@ -8,8 +8,6 @@ import { useAppDispatch } from '../../hooks/contexts'
 const HiddenLetterContainer = styled.div`
   cursor: pointer;
   margin: 0 5px;
-  width: 100px;
-  height: 100px;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -29,7 +27,7 @@ const HiddenLetter: React.FC<LetterProps> = ({ letter, words }) => {
   const dispatch = useAppDispatch()
 
   const handleClick = () => {
-    dispatch(setValue({ value: letter, words }))
+    dispatch(setValue({ value: letter, words, loading: true }))
   }
 
   return (
