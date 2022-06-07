@@ -1,7 +1,9 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { Image } from '../index'
 import styled from 'styled-components'
 import BlueFlower from '../../assets/blue_flowers.gif'
+import { setValue } from '../../reducers/letters'
+import { useAppDispatch } from '../../hooks/contexts'
 
 const HiddenLetterContainer = styled.div`
   cursor: pointer;
@@ -18,25 +20,21 @@ const HiddenLetterContainer = styled.div`
   }
 `
 
-const Letter = styled.span`
-  font-size: 28px;
-  fontweight: vold;
-`
-
 interface LetterProps {
   letter: string
   words: string[]
 }
 
 const HiddenLetter: React.FC<LetterProps> = ({ letter, words }) => {
-  const [isInside, setIsInside] = useState<boolean>(false)
+  const dispatch = useAppDispatch()
+
+  const handleClick = () => {
+    dispatch(setValue({ value: letter, words }))
+  }
 
   return (
-    <HiddenLetterContainer
-      onMouseEnter={() => setIsInside(true)}
-      onMouseLeave={() => setIsInside(false)}
-    >
-      {!isInside ? <Image source={BlueFlower} /> : <Letter>{letter}</Letter>}
+    <HiddenLetterContainer onClick={handleClick}>
+      <Image source={BlueFlower} />
     </HiddenLetterContainer>
   )
 }

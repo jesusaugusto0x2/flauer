@@ -4,6 +4,7 @@ export { default as HiddenLetter } from './atoms/HiddenLetter'
 export { default as Image } from './atoms/Image'
 
 // Molecule components
+export { default as CloudSelector } from './molecules/CloudSelector'
 export { default as PuzzleWord } from './molecules/PuzzleWord'
 
 // Container components

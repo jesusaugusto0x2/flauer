@@ -1,7 +1,6 @@
 import React from 'react'
 import styled from 'styled-components'
 import { HiddenLetter } from '../index'
-import BlueFlower from '../../assets/blue_flowers.gif'
 
 const PuzzleWordContainer = styled.div`
   display: flex;
