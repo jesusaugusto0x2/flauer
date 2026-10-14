@@ -79,3 +79,11 @@ export async function borrarPoema(id: string) {
     .returning({ fecha: poemas.fecha });
   return filas[0]?.fecha;
 }
+
+export async function contarDia(fecha: string): Promise<number> {
+  const [fila] = await db()
+    .select({ total: count() })
+    .from(poemas)
+    .where(eq(poemas.fecha, fecha));
+  return fila?.total ?? 0;
+}
