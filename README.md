@@ -1,88 +1,90 @@
 # Flauer
 
-Un diario personal de poemas. Cada poema pertenece a un día y aparece como una flor en el
-calendario. La lectura es pública; solo la persona dueña del diario puede escribir.
+A personal diary of poems. Every poem belongs to a day and shows up as a flower on the
+calendar. Reading is public; only the diary's owner can write.
 
-Hecho con Next.js (App Router, Server Components, Server Actions), Neon Postgres, Drizzle
-ORM, Zod, `jose` y Tailwind CSS.
+Built with Next.js (App Router, Server Components, Server Actions, Cache Components), Neon
+Postgres, Drizzle ORM, Zod, `jose` and Tailwind CSS. The code is in English; the UI is in
+Spanish.
 
-## Rutas
+## Routes
 
-| Ruta                 | Qué hace                                                    |
-| -------------------- | ----------------------------------------------------------- |
-| `/`                  | Calendario del mes actual. `?mes=2026-10` muestra otro mes. |
-| `/dia/AAAA-MM-DD`    | Poemas de ese día.                                          |
-| `/poema/[id]`        | Leer un poema.                                              |
-| `/escribir?fecha=…`  | Nuevo poema (solo con sesión). Sin fecha usa hoy.           |
-| `/poema/[id]/editar` | Editar un poema (solo con sesión).                          |
-| `/entrar`, `/salir`  | Abrir y cerrar sesión. No hay ningún link visible.          |
+| Route               | What it does                                                    |
+| ------------------- | --------------------------------------------------------------- |
+| `/`                 | Calendar for the current month. `?month=2026-10` shows another. |
+| `/day/YYYY-MM-DD`   | Poems for that day.                                             |
+| `/poem/[id]`        | Read a poem.                                                    |
+| `/write?date=…`     | New poem (session required). Defaults to today.                 |
+| `/poem/[id]/edit`   | Edit a poem (session required).                                 |
+| `/login`, `/logout` | Start and end the session. Nothing links to them.               |
 
-"Hoy" siempre se calcula en `America/Caracas` (`ZONA_HORARIA` en `src/lib/config.ts`).
-Ahí mismo se configuran el nombre de la app, el subtítulo y la firma opcional de los
-poemas.
+"Today" is always computed in `America/Caracas` (`TIME_ZONE` in `src/lib/config.ts`). The
+app name, subtitle and optional poem signature live in the same file.
 
-## Variables de entorno
+## Environment variables
 
-| Variable         | Para qué                                                               |
-| ---------------- | ---------------------------------------------------------------------- |
-| `DATABASE_URL`   | Conexión a Neon Postgres. En Vercel la inyecta la integración de Neon. |
-| `OWNER_PASSWORD` | Contraseña de `/entrar`.                                               |
-| `AUTH_SECRET`    | Secreto para firmar la cookie de sesión. Mínimo 32 caracteres.         |
+| Variable         | Purpose                                                                  |
+| ---------------- | ------------------------------------------------------------------------ |
+| `DATABASE_URL`   | Neon Postgres connection string. On Vercel the Neon integration sets it. |
+| `OWNER_PASSWORD` | Password for `/login`. You choose it.                                    |
+| `AUTH_SECRET`    | Random secret that signs the session cookie. At least 32 characters.     |
 
-Copia `.env.example` como `.env.local` y complétalo. `.env.local` está en `.gitignore`:
-nunca subas secretos al repo. Para generar `AUTH_SECRET`:
+Copy `.env.example` to `.env.local` and fill it in. `.env.local` is git-ignored: never
+commit secrets. To generate `AUTH_SECRET`:
 
 ```bash
 openssl rand -base64 32
 ```
 
-## Correr en local
+## Running locally
 
-Requiere Node 22.12 o superior (ver `.nvmrc`) y pnpm.
+Requires Node 22.12+ (see `.nvmrc`) and pnpm.
 
 ```bash
 pnpm install
-cp .env.example .env.local   # y completa los valores
-pnpm db:migrate              # crea las tablas
-pnpm db:seed                 # opcional: ~10 poemas de ejemplo
+cp .env.example .env.local   # then fill in the values
+pnpm db:migrate              # creates the tables
+pnpm db:seed                 # optional: ~10 sample poems
 pnpm dev
 ```
 
-Para desarrollo conviene usar una **rama de Neon** propia en vez de la base de producción
-(en la consola de Neon: _Branches → New branch_) y poner su cadena de conexión en
-`.env.local`.
+For development, use your own **Neon branch** rather than the production database (Neon
+console: _Branches → New branch_) and put its connection string in `.env.local`.
 
-`pnpm db:seed` es solo para desarrollo: se niega a correr con `NODE_ENV=production`, dentro
-de Vercel o sobre una base que ya tenga poemas.
+`pnpm db:seed` is for development only: it refuses to run with `NODE_ENV=production`, on
+Vercel, or against a database that already has poems.
 
-Otros scripts:
+Other scripts:
 
 ```bash
 pnpm lint          # ESLint
 pnpm format        # Prettier
-pnpm build         # build de producción
-pnpm db:studio     # explorar la base con Drizzle Studio
+pnpm build         # production build
+pnpm db:studio     # browse the database with Drizzle Studio
 ```
 
-## Migraciones
+## Migrations
 
-El esquema vive en `src/db/schema.ts` y las migraciones versionadas en `drizzle/`.
+The schema lives in `src/db/schema.ts` and the versioned migrations in `drizzle/`.
 
 ```bash
-# Después de cambiar el esquema: genera una migración nueva y súbela al repo
-pnpm db:generate --name describe-el-cambio
+# After changing the schema: generate a new migration and commit it
+pnpm db:generate --name describe-the-change
 
-# Aplica las migraciones pendientes a la base de DATABASE_URL
+# Apply pending migrations to the database in DATABASE_URL
 pnpm db:migrate
 ```
 
-## Desplegar en Vercel
+`db:migrate` runs `scripts/migrate.ts`, which uses Neon's HTTP driver (the same one the app
+uses) and prints a clear error when something fails.
 
-1. Importa el repo en Vercel (framework: Next.js; se detecta pnpm por el lockfile).
-2. En el proyecto: _Storage_ → _Create Database_ → **Neon** (Marketplace) y conéctala al
-   proyecto. Esto inyecta `DATABASE_URL` en los entornos.
-3. En _Settings → Environment Variables_ agrega `OWNER_PASSWORD` y `AUTH_SECRET`.
-4. Aplica las migraciones a la base de producción desde tu máquina:
+## Deploying to Vercel
+
+1. Import the repo in Vercel. `vercel.json` pins the framework to Next.js.
+2. In the project: _Storage → Create Database → Neon_ (Marketplace) and connect it to the
+   project. This injects `DATABASE_URL`.
+3. In _Settings → Environment Variables_ add `OWNER_PASSWORD` and `AUTH_SECRET`.
+4. Apply the migrations to the production database from your machine:
 
    ```bash
    pnpm dlx vercel link
@@ -90,7 +92,7 @@ pnpm db:migrate
    pnpm db:migrate
    ```
 
-5. Redespliega. Para escribir, entra en `https://tu-dominio/entrar`.
+5. Redeploy. To write, go to `https://your-domain/login`.
 
-Cada cambio de esquema futuro: `pnpm db:generate`, commit, y `pnpm db:migrate` contra la
-base de producción antes (o justo después) de desplegar.
+For every future schema change: `pnpm db:generate`, commit, and run `pnpm db:migrate`
+against production before (or right after) deploying.
