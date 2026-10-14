@@ -5,9 +5,9 @@ export const TIME_ZONE = "America/Caracas";
 
 export const LOCALE = "es";
 
-export const APP_NAME = "Flauer";
-export const APP_SUBTITLE = "Un poema, una flor";
-export const APP_DESCRIPTION = "Un diario de poemas fechados, uno por flor.";
+export const APP_NAME = "Para Flor";
+export const APP_SUBTITLE = "Un poema cada día, aunque nunca llegue a leerlos.";
+export const APP_DESCRIPTION = "Un diario de poemas y notas, uno por flor.";
 
 /** Signature shown under each poem. Empty = no signature. */
 export const SIGNATURE = "";
