@@ -1,21 +1,21 @@
 /**
- * Llena la base con poemas de ejemplo. SOLO para desarrollo local.
+ * Fills the database with sample poems. LOCAL DEVELOPMENT ONLY.
  *
  *   pnpm db:seed
  *
- * Se niega a correr en producción, en Vercel o sobre una base que ya tenga poemas.
+ * Refuses to run in production, on Vercel, or against a database that already has poems.
  */
 import { neon } from "@neondatabase/serverless";
 import { config } from "dotenv";
 import { count } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/neon-http";
-import { poemas } from "../src/db/schema";
-import { hoy } from "../src/lib/fechas";
+import { poems } from "../src/db/schema";
+import { today } from "../src/lib/dates";
 
 config({ path: [".env.local", ".env"], quiet: true });
 
-function abortar(motivo: string): never {
-  console.error(`✗ Seed cancelado: ${motivo}`);
+function abort(reason: string): never {
+  console.error(`✗ Seed aborted: ${reason}`);
   process.exit(1);
 }
 
@@ -24,92 +24,84 @@ if (
   process.env.VERCEL ||
   process.env.VERCEL_ENV
 ) {
-  abortar("no se ejecuta en producción ni en Vercel.");
+  abort("it never runs in production or on Vercel.");
 }
-if (!process.env.DATABASE_URL) abortar("falta DATABASE_URL en .env.local.");
+if (!process.env.DATABASE_URL) abort("DATABASE_URL is missing from .env.local.");
 
-/** Fecha de hace `n` días (respecto a hoy en Caracas), AAAA-MM-DD. */
-function haceDias(n: number) {
-  const [a, m, d] = hoy().split("-").map(Number);
-  return new Date(Date.UTC(a, m - 1, d - n)).toISOString().slice(0, 10);
+/** Date `n` days ago (relative to today in Caracas), YYYY-MM-DD. */
+function daysAgo(n: number) {
+  const [y, m, d] = today().split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1, d - n)).toISOString().slice(0, 10);
 }
 
-const ejemplos: { dias: number; titulo: string | null; texto: string }[] = [
+// Sample content is in Spanish, like the diary itself.
+const samples: { daysAgo: number; title: string | null; body: string }[] = [
   {
-    dias: 0,
-    titulo: "Lo que dejó la lluvia",
-    texto:
-      "Llovió toda la tarde\ny el patio se quedó pensando.\nUna flor, cansada de esperar,\nabrió sola sus manos.",
+    daysAgo: 0,
+    title: "Lo que dejó la lluvia",
+    body: "Llovió toda la tarde\ny el patio se quedó pensando.\nUna flor, cansada de esperar,\nabrió sola sus manos.",
   },
   {
-    dias: 0,
-    titulo: null,
-    texto:
-      "Hoy no tengo título,\nsolo esta luz de las seis\nque entra torcida\ny se sienta a mi lado.",
+    daysAgo: 0,
+    title: null,
+    body: "Hoy no tengo título,\nsolo esta luz de las seis\nque entra torcida\ny se sienta a mi lado.",
   },
   {
-    dias: 2,
-    titulo: "Mapa",
-    texto:
-      "Dibujé tu nombre\nen el vapor del espejo.\nSe fue borrando despacio,\ncomo se borran los caminos\nque uno ya se sabe de memoria.",
+    daysAgo: 2,
+    title: "Mapa",
+    body: "Dibujé tu nombre\nen el vapor del espejo.\nSe fue borrando despacio,\ncomo se borran los caminos\nque uno ya se sabe de memoria.",
   },
   {
-    dias: 5,
-    titulo: "Café",
-    texto: "La taza tibia,\nel silencio tibio,\nla mañana entera\ncabe en mis dos manos.",
+    daysAgo: 5,
+    title: "Café",
+    body: "La taza tibia,\nel silencio tibio,\nla mañana entera\ncabe en mis dos manos.",
   },
   {
-    dias: 5,
-    titulo: "Ventana",
-    texto:
-      "Desde aquí el Ávila\nse pone el sombrero de nubes\ny saluda a nadie.\nYo le devuelvo el saludo.",
+    daysAgo: 5,
+    title: "Ventana",
+    body: "Desde aquí el Ávila\nse pone el sombrero de nubes\ny saluda a nadie.\nYo le devuelvo el saludo.",
   },
   {
-    dias: 5,
-    titulo: "Inventario",
-    texto:
-      "Tres libros a medias,\nuna llave que no abre nada,\nuna carta sin sobre\ny las ganas de escribirte.",
+    daysAgo: 5,
+    title: "Inventario",
+    body: "Tres libros a medias,\nuna llave que no abre nada,\nuna carta sin sobre\ny las ganas de escribirte.",
   },
   {
-    dias: 5,
-    titulo: "Cuarta flor",
-    texto:
-      "Cuando un día da para tanto\nhay que dejarlo florecer\nsin preguntarle por qué.",
+    daysAgo: 5,
+    title: "Cuarta flor",
+    body: "Cuando un día da para tanto\nhay que dejarlo florecer\nsin preguntarle por qué.",
   },
   {
-    dias: 9,
-    titulo: "Noche",
-    texto:
-      "La noche es un papel azul\ncon rayas que nadie ve.\nYo escribo encima despacio\npara no despertar a la luna.",
+    daysAgo: 9,
+    title: "Noche",
+    body: "La noche es un papel azul\ncon rayas que nadie ve.\nYo escribo encima despacio\npara no despertar a la luna.",
   },
   {
-    dias: 16,
-    titulo: "Semilla",
-    texto:
-      "Todo lo que digo\nempezó siendo callado.\nAsí empiezan también\nlos jardines.",
+    daysAgo: 16,
+    title: "Semilla",
+    body: "Todo lo que digo\nempezó siendo callado.\nAsí empiezan también\nlos jardines.",
   },
   {
-    dias: 33,
-    titulo: "El mes pasado",
-    texto:
-      "Lo que fui el mes pasado\nme mira desde el calendario\ncon una flor en la mano\ny cara de no arrepentirse.",
+    daysAgo: 33,
+    title: "El mes pasado",
+    body: "Lo que fui el mes pasado\nme mira desde el calendario\ncon una flor en la mano\ny cara de no arrepentirse.",
   },
 ];
 
 async function main() {
   const db = drizzle(neon(process.env.DATABASE_URL!));
 
-  const [{ total }] = await db.select({ total: count() }).from(poemas);
+  const [{ total }] = await db.select({ total: count() }).from(poems);
   if (total > 0)
-    abortar(`la base ya tiene ${total} poemas; el seed solo llena bases vacías.`);
+    abort(`the database already has ${total} poems; seeding only fills empty ones.`);
 
-  // Se insertan de a uno para que creado_en respete el orden dentro de cada día.
-  for (const e of ejemplos) {
+  // Inserted one by one so created_at keeps the order within each day.
+  for (const s of samples) {
     await db
-      .insert(poemas)
-      .values({ fecha: haceDias(e.dias), titulo: e.titulo, texto: e.texto });
+      .insert(poems)
+      .values({ date: daysAgo(s.daysAgo), title: s.title, body: s.body });
   }
-  console.log(`✓ ${ejemplos.length} poemas de ejemplo creados.`);
+  console.log(`✓ Created ${samples.length} sample poems.`);
 }
 
 main().catch((error) => {

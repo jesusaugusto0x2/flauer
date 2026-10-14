@@ -1,113 +1,117 @@
 import Link from "next/link";
 import { connection } from "next/server";
 import { Suspense } from "react";
-import { Cargando } from "@/components/cargando";
-import { Flor, Flores } from "@/components/iconos";
-import { InterruptorModo } from "@/components/interruptor-modo";
-import { APP_NOMBRE, APP_SUBTITULO } from "@/lib/config";
+import { Flower, Flowers } from "@/components/icons";
+import { Loading } from "@/components/loading";
+import { ModeSwitch } from "@/components/mode-switch";
+import { APP_NAME, APP_SUBTITLE } from "@/lib/config";
 import {
-  esMesValido,
-  fechaCorta,
-  hoy,
-  mesDe,
-  nombreDelMes,
+  addMonths,
+  isValidMonth,
+  monthName,
+  monthOf,
+  monthTitle,
   plural,
-  semanasDelMes,
-  soloMes,
-  sumarMeses,
-} from "@/lib/fechas";
-import { contarDia, conteoDelMes } from "@/lib/poemas";
-import { modoActual, type Modo } from "@/lib/sesion";
+  shortDate,
+  today,
+  weeksOfMonth,
+} from "@/lib/dates";
+import { countByDay, countOnDay } from "@/lib/poems";
+import { currentMode, type Mode } from "@/lib/session";
 
-const DIAS_SEMANA = [
-  { corto: "L", largo: "lunes" },
-  { corto: "M", largo: "martes" },
-  { corto: "X", largo: "miércoles" },
-  { corto: "J", largo: "jueves" },
-  { corto: "V", largo: "viernes" },
-  { corto: "S", largo: "sábado" },
-  { corto: "D", largo: "domingo" },
+const WEEKDAYS = [
+  { short: "L", long: "lunes" },
+  { short: "M", long: "martes" },
+  { short: "X", long: "miércoles" },
+  { short: "J", long: "jueves" },
+  { short: "V", long: "viernes" },
+  { short: "S", long: "sábado" },
+  { short: "D", long: "domingo" },
 ];
 
-export default function Inicio({ searchParams }: PageProps<"/">) {
+export default function Home({ searchParams }: PageProps<"/">) {
   return (
     <main>
       <header className="pt-4 text-center">
-        <p className="antetitulo">Diario de poemas</p>
-        <h1 className="font-mano mt-1 text-[64px] leading-none font-semibold">
-          {APP_NOMBRE}
+        <p className="eyebrow">Diario de poemas</p>
+        <h1 className="font-hand mt-1 text-[64px] leading-none font-semibold">
+          {APP_NAME}
         </h1>
-        <p className="text-secundario mt-2 text-[17px] italic">{APP_SUBTITULO}</p>
+        <p className="text-secondary mt-2 text-[17px] italic">{APP_SUBTITLE}</p>
       </header>
-      <Suspense fallback={<Cargando />}>
-        <Calendario searchParams={searchParams} />
+      <Suspense fallback={<Loading />}>
+        <Calendar searchParams={searchParams} />
       </Suspense>
     </main>
   );
 }
 
-const urlMes = (mes: string, mesActual: string) =>
-  mes === mesActual ? "/" : `/?mes=${mes}`;
+const monthHref = (month: string, currentMonth: string) =>
+  month === currentMonth ? "/" : `/?month=${month}`;
 
-async function Calendario({ searchParams }: Pick<PageProps<"/">, "searchParams">) {
+async function Calendar({ searchParams }: Pick<PageProps<"/">, "searchParams">) {
   await connection();
-  const [{ mes: mesPedido }, { sesion, modo }] = await Promise.all([
+  const [{ month: requested }, { session, mode }] = await Promise.all([
     searchParams,
-    modoActual(),
+    currentMode(),
   ]);
-  const fechaHoy = hoy();
-  const mesActual = mesDe(fechaHoy);
-  const mes =
-    typeof mesPedido === "string" && esMesValido(mesPedido) && mesPedido <= mesActual
-      ? mesPedido
-      : mesActual;
+  const todayDate = today();
+  const currentMonth = monthOf(todayDate);
+  const month =
+    typeof requested === "string" && isValidMonth(requested) && requested <= currentMonth
+      ? requested
+      : currentMonth;
 
-  const [conteo, poemasHoy] = await Promise.all([
-    conteoDelMes(mes),
-    mes === mesActual ? undefined : contarDia(fechaHoy),
+  const [counts, todayCountElsewhere] = await Promise.all([
+    countByDay(month),
+    month === currentMonth ? undefined : countOnDay(todayDate),
   ]);
-  const totalHoy = poemasHoy ?? conteo[fechaHoy] ?? 0;
-  const totalMes = Object.values(conteo).reduce((a, b) => a + b, 0);
-  const anterior = sumarMeses(mes, -1);
-  const esMesActual = mes === mesActual;
+  const todayCount = todayCountElsewhere ?? counts[todayDate] ?? 0;
+  const monthTotal = Object.values(counts).reduce((a, b) => a + b, 0);
+  const previous = addMonths(month, -1);
+  const next = addMonths(month, 1);
+  const isCurrentMonth = month === currentMonth;
+
+  const navButton =
+    "flex size-[44px] items-center justify-center rounded-full border border-soft-border text-[22px]";
 
   return (
     <>
-      {sesion && (
+      {session && (
         <div className="mt-6 flex justify-center">
-          <InterruptorModo modo={modo} />
+          <ModeSwitch mode={mode} />
         </div>
       )}
 
-      <section aria-labelledby="titulo-mes" className="mt-8">
+      <section aria-labelledby="month-title" className="mt-8">
         <div className="flex items-center justify-between">
           <Link
-            href={urlMes(anterior, mesActual)}
-            className="border-borde hover:bg-claro/8 flex size-[44px] items-center justify-center rounded-full border text-[22px]"
-            aria-label={`Mes anterior: ${nombreDelMes(anterior)}`}
+            href={monthHref(previous, currentMonth)}
+            className={`${navButton} hover:bg-light/8`}
+            aria-label={`Mes anterior: ${monthTitle(previous)}`}
           >
             <span aria-hidden="true">‹</span>
           </Link>
           <h2
-            id="titulo-mes"
-            className="font-mano text-[34px] leading-none font-semibold"
+            id="month-title"
+            className="font-hand text-[34px] leading-none font-semibold"
           >
-            {nombreDelMes(mes)}
+            {monthTitle(month)}
           </h2>
-          {esMesActual ? (
+          {isCurrentMonth ? (
             <button
               type="button"
               disabled
-              className="border-borde flex size-[44px] cursor-not-allowed items-center justify-center rounded-full border text-[22px] opacity-35"
+              className={`${navButton} cursor-not-allowed opacity-35`}
               aria-label="Mes siguiente (no disponible)"
             >
               <span aria-hidden="true">›</span>
             </button>
           ) : (
             <Link
-              href={urlMes(sumarMeses(mes, 1), mesActual)}
-              className="border-borde hover:bg-claro/8 flex size-[44px] items-center justify-center rounded-full border text-[22px]"
-              aria-label={`Mes siguiente: ${nombreDelMes(sumarMeses(mes, 1))}`}
+              href={monthHref(next, currentMonth)}
+              className={`${navButton} hover:bg-light/8`}
+              aria-label={`Mes siguiente: ${monthTitle(next)}`}
             >
               <span aria-hidden="true">›</span>
             </Link>
@@ -115,55 +119,55 @@ async function Calendario({ searchParams }: Pick<PageProps<"/">, "searchParams">
         </div>
 
         <div className="mt-6 grid grid-cols-7 gap-[6px]" aria-hidden="true">
-          {DIAS_SEMANA.map((d) => (
+          {WEEKDAYS.map((d) => (
             <abbr
-              key={d.corto}
-              title={d.largo}
-              className="text-secundario text-center text-[13px] no-underline"
+              key={d.short}
+              title={d.long}
+              className="text-secondary text-center text-[13px] no-underline"
             >
-              {d.corto}
+              {d.short}
             </abbr>
           ))}
         </div>
 
         <ol
           className="mt-2 grid grid-cols-7 gap-[6px]"
-          aria-label={`Días de ${nombreDelMes(mes)}`}
+          aria-label={`Días de ${monthTitle(month)}`}
         >
-          {semanasDelMes(mes)
+          {weeksOfMonth(month)
             .flat()
-            .map((fecha, i) => (
-              <li key={fecha ?? `vacio-${i}`}>
-                {fecha && (
-                  <Celda
-                    fecha={fecha}
-                    cantidad={conteo[fecha] ?? 0}
-                    fechaHoy={fechaHoy}
-                    modo={modo}
+            .map((date, i) => (
+              <li key={date ?? `empty-${i}`}>
+                {date && (
+                  <DayCell
+                    date={date}
+                    count={counts[date] ?? 0}
+                    todayDate={todayDate}
+                    mode={mode}
                   />
                 )}
               </li>
             ))}
         </ol>
 
-        <div className="text-secundario mt-5 flex items-center justify-between text-[16px]">
+        <div className="text-secondary mt-5 flex items-center justify-between text-[16px]">
           <span className="inline-flex items-center gap-2">
-            <Flor /> <span>= un poema</span>
+            <Flower /> <span>= un poema</span>
           </span>
           <span className="italic">
-            {plural(totalMes, "poema", "poemas")} en {soloMes(mes)}
+            {plural(monthTotal, "poema", "poemas")} en {monthName(month)}
           </span>
         </div>
       </section>
 
       <div className="mt-10 flex justify-center">
-        {modo === "escritura" ? (
-          <Link href="/escribir" className="pildora pildora-vino px-6">
+        {mode === "write" ? (
+          <Link href="/write" className="pill pill-wine px-6">
             + Escribir el poema de hoy
           </Link>
         ) : (
-          totalHoy > 0 && (
-            <Link href={`/dia/${fechaHoy}`} className="pildora px-6">
+          todayCount > 0 && (
+            <Link href={`/day/${todayDate}`} className="pill px-6">
               Leer los poemas de hoy <span aria-hidden="true">→</span>
             </Link>
           )
@@ -173,73 +177,75 @@ async function Calendario({ searchParams }: Pick<PageProps<"/">, "searchParams">
   );
 }
 
-const BASE_CELDA =
+const CELL_BASE =
   "flex h-[62px] flex-col items-center gap-[5px] rounded-[10px] pt-[7px] text-[18px] leading-none";
 
-function Celda({
-  fecha,
-  cantidad,
-  fechaHoy,
-  modo,
+function DayCell({
+  date,
+  count,
+  todayDate,
+  mode,
 }: {
-  fecha: string;
-  cantidad: number;
-  fechaHoy: string;
-  modo: Modo;
+  date: string;
+  count: number;
+  todayDate: string;
+  mode: Mode;
 }) {
-  const dia = Number(fecha.slice(8));
-  const esHoy = fecha === fechaHoy;
-  const etiquetaDia = `${fechaCorta(fecha)}${esHoy ? ", hoy" : ""}`;
+  const day = Number(date.slice(8));
+  const isToday = date === todayDate;
+  const dayLabel = `${shortDate(date)}${isToday ? ", hoy" : ""}`;
 
-  if (fecha > fechaHoy) {
+  if (date > todayDate) {
     return (
       <div
         role="img"
-        aria-label={`${etiquetaDia}: aún no llega`}
-        className={`${BASE_CELDA} opacity-25`}
+        aria-label={`${dayLabel}: aún no llega`}
+        className={`${CELL_BASE} opacity-25`}
       >
-        {dia}
+        {day}
       </div>
     );
   }
 
-  if (cantidad > 0) {
+  if (count > 0) {
     return (
       <Link
-        href={`/dia/${fecha}`}
-        aria-label={`${etiquetaDia}: ${plural(cantidad, "poema", "poemas")}`}
-        className={`${BASE_CELDA} ${
-          esHoy
-            ? "border-rosa bg-rosa/14 border font-semibold text-white"
-            : "bg-claro/7 hover:bg-claro/12"
+        href={`/day/${date}`}
+        aria-label={`${dayLabel}: ${plural(count, "poema", "poemas")}`}
+        className={`${CELL_BASE} ${
+          isToday
+            ? "border-pink bg-pink/14 border font-semibold text-white"
+            : "bg-light/7 hover:bg-light/12"
         }`}
       >
-        <span>{dia}</span>
-        {cantidad <= 3 ? (
-          <Flores cantidad={cantidad} className="justify-center gap-[2px]" />
+        <span>{day}</span>
+        {count <= 3 ? (
+          <Flowers count={count} className="justify-center gap-[2px]" />
         ) : (
           <span className="inline-flex items-center gap-[3px]" aria-hidden="true">
-            <Flor />
-            <span className="text-rosa text-[12px]">{cantidad}</span>
+            <Flower />
+            <span className="text-pink text-[12px]">{count}</span>
           </span>
         )}
       </Link>
     );
   }
 
-  const claseHoy = esHoy ? "border border-rosa font-semibold text-white" : "text-apagado";
+  const todayClass = isToday
+    ? "border border-pink font-semibold text-white"
+    : "text-muted";
 
-  if (modo === "escritura") {
+  if (mode === "write") {
     return (
       <Link
-        href={`/escribir?fecha=${fecha}`}
-        aria-label={`${etiquetaDia}: sin poemas. Escribir uno`}
-        className={`${BASE_CELDA} ${claseHoy} ${
-          esHoy ? "" : "border-claro/25 border border-dashed"
-        } hover:bg-claro/7`}
+        href={`/write?date=${date}`}
+        aria-label={`${dayLabel}: sin poemas. Escribir uno`}
+        className={`${CELL_BASE} ${todayClass} ${
+          isToday ? "" : "border-light/25 border border-dashed"
+        } hover:bg-light/7`}
       >
-        <span>{dia}</span>
-        <span className="text-secundario text-[15px]" aria-hidden="true">
+        <span>{day}</span>
+        <span className="text-secondary text-[15px]" aria-hidden="true">
           +
         </span>
       </Link>
@@ -249,10 +255,10 @@ function Celda({
   return (
     <div
       role="img"
-      aria-label={`${etiquetaDia}: sin poemas`}
-      className={`${BASE_CELDA} ${claseHoy}`}
+      aria-label={`${dayLabel}: sin poemas`}
+      className={`${CELL_BASE} ${todayClass}`}
     >
-      {dia}
+      {day}
     </div>
   );
 }

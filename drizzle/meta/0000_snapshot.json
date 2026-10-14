@@ -1,28 +1,28 @@
 {
-  "id": "80a38984-b35b-4e3f-929f-7d500ba72b1a",
+  "id": "41775d6d-4528-4f01-a8da-13628ddcdede",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
-    "public.intentos_acceso": {
-      "name": "intentos_acceso",
+    "public.login_attempts": {
+      "name": "login_attempts",
       "schema": "",
       "columns": {
-        "clave": {
-          "name": "clave",
+        "key": {
+          "name": "key",
           "type": "text",
           "primaryKey": true,
           "notNull": true
         },
-        "intentos": {
-          "name": "intentos",
+        "attempts": {
+          "name": "attempts",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
           "default": 0
         },
-        "ventana_inicio": {
-          "name": "ventana_inicio",
+        "window_start": {
+          "name": "window_start",
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": true,
@@ -37,8 +37,8 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.poemas": {
-      "name": "poemas",
+    "public.poems": {
+      "name": "poems",
       "schema": "",
       "columns": {
         "id": {
@@ -48,33 +48,33 @@
           "notNull": true,
           "default": "gen_random_uuid()"
         },
-        "fecha": {
-          "name": "fecha",
+        "date": {
+          "name": "date",
           "type": "date",
           "primaryKey": false,
           "notNull": true
         },
-        "titulo": {
-          "name": "titulo",
+        "title": {
+          "name": "title",
           "type": "text",
           "primaryKey": false,
           "notNull": false
         },
-        "texto": {
-          "name": "texto",
+        "body": {
+          "name": "body",
           "type": "text",
           "primaryKey": false,
           "notNull": true
         },
-        "creado_en": {
-          "name": "creado_en",
+        "created_at": {
+          "name": "created_at",
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
         },
-        "editado_en": {
-          "name": "editado_en",
+        "updated_at": {
+          "name": "updated_at",
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": true,
@@ -82,17 +82,17 @@
         }
       },
       "indexes": {
-        "poemas_fecha_idx": {
-          "name": "poemas_fecha_idx",
+        "poems_date_idx": {
+          "name": "poems_date_idx",
           "columns": [
             {
-              "expression": "fecha",
+              "expression": "date",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
             },
             {
-              "expression": "creado_en",
+              "expression": "created_at",
               "isExpression": false,
               "asc": true,
               "nulls": "last"

@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Caveat, Cormorant_Garamond } from "next/font/google";
-import { APP_DESCRIPCION, APP_NOMBRE } from "@/lib/config";
+import { APP_DESCRIPTION, APP_NAME } from "@/lib/config";
 import "./globals.css";
 
 const cormorant = Cormorant_Garamond({
@@ -16,26 +16,26 @@ const caveat = Caveat({
   weight: "600",
 });
 
-const urlBase = process.env.VERCEL_PROJECT_PRODUCTION_URL
+const baseUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL
   ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
   : "http://localhost:3000";
 
 export const metadata: Metadata = {
-  metadataBase: new URL(urlBase),
-  title: { default: APP_NOMBRE, template: `%s · ${APP_NOMBRE}` },
-  description: APP_DESCRIPCION,
-  applicationName: APP_NOMBRE,
+  metadataBase: new URL(baseUrl),
+  title: { default: APP_NAME, template: `%s · ${APP_NAME}` },
+  description: APP_DESCRIPTION,
+  applicationName: APP_NAME,
   openGraph: {
-    title: APP_NOMBRE,
-    description: APP_DESCRIPCION,
-    siteName: APP_NOMBRE,
+    title: APP_NAME,
+    description: APP_DESCRIPTION,
+    siteName: APP_NAME,
     locale: "es_VE",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: APP_NOMBRE,
-    description: APP_DESCRIPCION,
+    title: APP_NAME,
+    description: APP_DESCRIPTION,
   },
 };
 

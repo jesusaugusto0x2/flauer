@@ -1,4 +1,3 @@
-import { sql } from "drizzle-orm";
 import {
   date,
   index,
@@ -9,28 +8,26 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 
-export const poemas = pgTable(
-  "poemas",
+export const poems = pgTable(
+  "poems",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    // El día al que pertenece el poema (AAAA-MM-DD), no cuándo se creó.
-    fecha: date("fecha", { mode: "string" }).notNull(),
-    titulo: text("titulo"),
-    texto: text("texto").notNull(),
-    creadoEn: timestamp("creado_en", { withTimezone: true }).notNull().defaultNow(),
-    editadoEn: timestamp("editado_en", { withTimezone: true }).notNull().defaultNow(),
+    // The day the poem belongs to (YYYY-MM-DD), not when it was created.
+    date: date("date", { mode: "string" }).notNull(),
+    title: text("title"),
+    body: text("body").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [index("poemas_fecha_idx").on(t.fecha, t.creadoEn)],
+  (t) => [index("poems_date_idx").on(t.date, t.createdAt)],
 );
 
-// Intentos de acceso a /entrar, para el rate-limit del login.
-export const intentosAcceso = pgTable("intentos_acceso", {
-  clave: text("clave").primaryKey(),
-  intentos: integer("intentos").notNull().default(0),
-  ventanaInicio: timestamp("ventana_inicio", { withTimezone: true })
-    .notNull()
-    .default(sql`now()`),
+// Attempts against /login, used to rate-limit it.
+export const loginAttempts = pgTable("login_attempts", {
+  key: text("key").primaryKey(),
+  attempts: integer("attempts").notNull().default(0),
+  windowStart: timestamp("window_start", { withTimezone: true }).notNull().defaultNow(),
 });
 
-export type Poema = typeof poemas.$inferSelect;
-export type PoemaNuevo = typeof poemas.$inferInsert;
+export type Poem = typeof poems.$inferSelect;
+export type NewPoem = typeof poems.$inferInsert;

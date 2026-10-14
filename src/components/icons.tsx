@@ -1,16 +1,10 @@
-/** Un poema = una flor. */
-export function Flor({
-  tamano = 12,
-  className,
-}: {
-  tamano?: number;
-  className?: string;
-}) {
+/** One poem = one flower. */
+export function Flower({ size = 12, className }: { size?: number; className?: string }) {
   return (
     <svg
       viewBox="0 0 12 12"
-      width={tamano}
-      height={tamano}
+      width={size}
+      height={size}
       aria-hidden="true"
       className={className}
     >
@@ -26,8 +20,8 @@ export function Flor({
   );
 }
 
-/** Flor de trazo que decora la esquina del papel. */
-export function FlorTrazo({ className }: { className?: string }) {
+/** Line-drawn flower that decorates the corner of the paper. */
+export function OutlineFlower({ className }: { className?: string }) {
   return (
     <svg
       viewBox="0 0 92 120"
@@ -52,18 +46,12 @@ export function FlorTrazo({ className }: { className?: string }) {
   );
 }
 
-/** Una flor por poema, en fila. */
-export function Flores({
-  cantidad,
-  className,
-}: {
-  cantidad: number;
-  className?: string;
-}) {
+/** One flower per poem, in a row. */
+export function Flowers({ count, className }: { count: number; className?: string }) {
   return (
     <span className={`inline-flex flex-wrap gap-1 ${className ?? ""}`} aria-hidden="true">
-      {Array.from({ length: cantidad }, (_, i) => (
-        <Flor key={i} />
+      {Array.from({ length: count }, (_, i) => (
+        <Flower key={i} />
       ))}
     </span>
   );

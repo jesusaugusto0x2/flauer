@@ -1,11 +1,11 @@
 import { ImageResponse } from "next/og";
-import { APP_NOMBRE, APP_SUBTITULO } from "@/lib/config";
+import { APP_NAME, APP_SUBTITLE } from "@/lib/config";
 
-export const alt = APP_NOMBRE;
+export const alt = APP_NAME;
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-export default function Imagen() {
+export default function Image() {
   return new ImageResponse(
     <div
       style={{
@@ -32,9 +32,9 @@ export default function Imagen() {
       <div style={{ marginTop: 40, fontSize: 28, letterSpacing: 10, color: "#b9b0c4" }}>
         DIARIO DE POEMAS
       </div>
-      <div style={{ marginTop: 12, fontSize: 110 }}>{APP_NOMBRE}</div>
+      <div style={{ marginTop: 12, fontSize: 110 }}>{APP_NAME}</div>
       <div style={{ marginTop: 8, fontSize: 40, color: "#b9b0c4", fontStyle: "italic" }}>
-        {APP_SUBTITULO}
+        {APP_SUBTITLE}
       </div>
     </div>,
     size,
