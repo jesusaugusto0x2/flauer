@@ -75,7 +75,8 @@ async function CalendarHome({ searchParams }: Pick<PageProps<"/">, "searchParams
             mode={mode}
             todayDate={todayDate}
             heading="h2"
-            className="hidden min-w-0 lg:block lg:flex-[1_1_420px]"
+            desktopOnly
+            className="min-w-0 lg:flex-[1_1_420px]"
           />
         ) : (
           <p className="hidden min-w-0 pt-2 text-[19px] text-secondary italic lg:block lg:flex-[1_1_420px]">

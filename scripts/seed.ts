@@ -1,5 +1,5 @@
 /**
- * Fills the database with sample poems and notes. LOCAL DEVELOPMENT ONLY.
+ * Fills the database with sample poems, notes and songs. LOCAL DEVELOPMENT ONLY.
  *
  *   pnpm db:seed
  *
@@ -35,11 +35,14 @@ function daysAgo(n: number) {
 }
 
 // Sample content is in Spanish, like the diary itself.
+// Song links are made-up placeholders with the right shape; they won't play.
 const samples: {
   kind?: EntryKind;
   daysAgo: number;
   title: string | null;
   body: string;
+  artist?: string;
+  spotifyUrl?: string;
 }[] = [
   {
     daysAgo: 0,
@@ -109,6 +112,34 @@ const samples: {
     title: null,
     body: "No escribí poema. Fue un día largo y solo quería dormir.",
   },
+  {
+    kind: "note",
+    daysAgo: 5,
+    title: "Lo que pasó el sábado",
+    body:
+      "Fuimos al mercado temprano, antes de que llegara el calor. Compramos mangos, " +
+      "un ramo de girasoles y pan de jamón aunque todavía no es diciembre.\n\n" +
+      "En la vuelta nos agarró la lluvia y nos metimos en una panadería a esperar. " +
+      "Pedimos dos marroncitos y nos quedamos hablando de todo y de nada.\n\n" +
+      "Quiero acordarme de ese olor a pan y a lluvia, y de cómo te reías cuando " +
+      "se te mojaron los zapatos nuevos.",
+  },
+  {
+    kind: "song",
+    daysAgo: 0,
+    title: "Luz de las seis",
+    artist: "Banda de ejemplo",
+    spotifyUrl: "https://open.spotify.com/track/0000000000000000000001",
+    body: "Me recuerda a la tarde de hoy, cuando todo se puso naranja.",
+  },
+  {
+    kind: "song",
+    daysAgo: 2,
+    title: "Mapa de bolsillo",
+    artist: "Otra banda de ejemplo",
+    spotifyUrl: "https://open.spotify.com/track/0000000000000000000002",
+    body: "",
+  },
 ];
 
 async function main() {
@@ -126,6 +157,8 @@ async function main() {
       date: daysAgo(s.daysAgo),
       title: s.title,
       body: s.body,
+      artist: s.artist ?? null,
+      spotifyUrl: s.spotifyUrl ?? null,
     });
   }
   console.log(`✓ Created ${samples.length} sample entries.`);

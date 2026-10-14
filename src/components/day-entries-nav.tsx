@@ -1,12 +1,18 @@
 import Link from "next/link";
-import type { Entry } from "@/db/schema";
+import type { Entry, EntryKind } from "@/db/schema";
 import { shortDate } from "@/lib/dates";
 import { displayTitle } from "@/lib/kinds";
 import { Flower } from "./icons";
 
+const ROW_STYLE: Record<EntryKind, { color: string; font: string; current: string }> = {
+  poem: { color: "text-light", font: "", current: "bg-pink/15" },
+  note: { color: "text-gold", font: "italic", current: "bg-gold/15" },
+  song: { color: "text-lilac", font: "italic", current: "bg-lilac/15" },
+};
+
 /**
- * Desktop side list of a day's entries. Poems open on their own page; notes are
- * read on their day, so they link there.
+ * Desktop side list of a day's entries. Poems and notes open their own page;
+ * songs live on their day, so they link to their card there.
  */
 export function DayEntriesNav({
   date,
@@ -14,43 +20,45 @@ export function DayEntriesNav({
   currentId,
   label,
   dense = false,
+  className = "",
 }: {
   date: string;
   entries: Pick<Entry, "id" | "kind" | "title">[];
   currentId?: string;
   label: string;
   dense?: boolean;
+  className?: string;
 }) {
   const row = `flex items-center gap-2.5 rounded-md px-3 ${
     dense ? "min-h-11 py-1.5 text-[18px]" : "min-h-12 py-2 text-[19px]"
   }`;
 
   return (
-    <nav aria-label={label}>
+    <nav aria-label={label} className={className}>
       <ul className="flex flex-col gap-1">
         {entries.map((e) => {
-          const content =
-            e.kind === "poem" ? (
-              <>
-                <Flower kind="poem" size={14} />
-                {displayTitle(e)}
-              </>
-            ) : (
-              <>
-                <Flower kind="note" size={14} />
-                <span className="text-gold italic">{e.title?.trim() || "Nota"}</span>
-              </>
-            );
+          const style = ROW_STYLE[e.kind];
+          const content = (
+            <>
+              <Flower kind={e.kind} size={14} className="shrink-0" />
+              <span className="min-w-0 truncate">{displayTitle(e)}</span>
+            </>
+          );
           return (
             <li key={e.id}>
               {e.id === currentId ? (
-                <span aria-current="page" className={`${row} bg-pink/15 text-white`}>
+                <span
+                  aria-current="page"
+                  className={`${row} ${style.current} ${style.font} text-white`}
+                >
                   {content}
                 </span>
               ) : (
                 <Link
-                  href={e.kind === "poem" ? `/poem/${e.id}` : `/day/${date}`}
-                  className={`${row} text-light hover:bg-light/7`}
+                  href={
+                    e.kind === "song" ? `/day/${date}#entry-${e.id}` : `/entry/${e.id}`
+                  }
+                  className={`${row} ${style.color} ${style.font} hover:bg-light/7`}
                 >
                   {content}
                 </Link>
@@ -75,10 +83,10 @@ export function SideColumnHeader({
 }) {
   return (
     <>
-      <Link href={backHref} className="pill self-start px-4">
+      <Link href={backHref} className="pill shrink-0 self-start px-4">
         <span aria-hidden="true">←</span> Calendario
       </Link>
-      <div>
+      <div className="shrink-0">
         <p className="text-[13px] tracking-[0.24em] text-secondary uppercase">
           {eyebrow}
         </p>

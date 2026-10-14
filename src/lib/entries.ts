@@ -1,17 +1,16 @@
 import "server-only";
 import { and, asc, count, eq, gte, lte } from "drizzle-orm";
 import { db } from "@/db";
-import { entries, type Entry, type EntryKind } from "@/db/schema";
-import type { KindCounts } from "./kinds";
+import { entries, type Entry } from "@/db/schema";
+import { emptyCounts, type KindCounts } from "./kinds";
+import type { EntryInput } from "./validation";
 import { toDate } from "./dates";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export const isValidId = (id: string) => UUID_RE.test(id);
 
-type EntryInput = { kind: EntryKind; date: string; title: string | null; body: string };
-
-/** Poems and notes per day within a month (YYYY-MM). */
+/** Poems, notes and songs per day within a month (YYYY-MM). */
 export async function countByDay(month: string): Promise<Record<string, KindCounts>> {
   const [year, m] = month.split("-").map(Number);
   const lastDay = new Date(Date.UTC(year, m, 0)).getUTCDate();
@@ -28,13 +27,13 @@ export async function countByDay(month: string): Promise<Record<string, KindCoun
 
   const byDay: Record<string, KindCounts> = {};
   for (const row of rows) {
-    byDay[row.date] ??= { poem: 0, note: 0 };
+    byDay[row.date] ??= emptyCounts();
     byDay[row.date][row.kind] = row.total;
   }
   return byDay;
 }
 
-/** Every entry of a day, poems and notes mixed, in the order they were written. */
+/** Every entry of a day, all kinds mixed, in the order they were written. */
 export async function entriesOnDay(date: string): Promise<Entry[]> {
   return db()
     .select()

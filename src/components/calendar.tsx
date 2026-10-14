@@ -1,7 +1,14 @@
 import Link from "next/link";
 import type { EntryKind } from "@/db/schema";
 import { addMonths, monthOf, monthTitle, shortDate, weeksOfMonth } from "@/lib/dates";
-import { countLabel, describeCounts, ENTRY_KINDS, type KindCounts } from "@/lib/kinds";
+import {
+  countLabel,
+  describeCounts,
+  emptyCounts,
+  ENTRY_KINDS,
+  totalCount,
+  type KindCounts,
+} from "@/lib/kinds";
 import type { Mode } from "@/lib/session";
 import { Flower } from "./icons";
 
@@ -15,7 +22,13 @@ const WEEKDAYS = [
   { short: "D", medium: "Dom", long: "domingo" },
 ];
 
-const NO_ENTRIES: KindCounts = { poem: 0, note: 0 };
+const NO_ENTRIES = emptyCounts();
+
+const LEGEND: Record<EntryKind, string> = {
+  poem: "poema",
+  note: "nota",
+  song: "canción",
+};
 
 const monthHref = (month: string, currentMonth: string) =>
   month === currentMonth ? "/" : `/?month=${month}`;
@@ -41,15 +54,14 @@ export function Calendar({
   const previous = addMonths(month, -1);
   const next = addMonths(month, 1);
 
-  const totals: KindCounts = { poem: 0, note: 0 };
+  const totals = emptyCounts();
   for (const day of Object.values(counts)) {
-    totals.poem += day.poem;
-    totals.note += day.note;
+    for (const kind of ENTRY_KINDS) totals[kind] += day[kind];
   }
-  const summary =
-    totals.note > 0
-      ? `${countLabel("poem", totals.poem)} · ${countLabel("note", totals.note)}`
-      : countLabel("poem", totals.poem);
+  // "14 poemas · 5 notas · 6 canciones": poems always, the rest when there are any.
+  const summary = ENTRY_KINDS.filter((kind) => kind === "poem" || totals[kind] > 0)
+    .map((kind) => countLabel(kind, totals[kind]))
+    .join(" · ");
 
   const navButton =
     "flex size-[44px] items-center justify-center rounded-full border border-soft-border text-[22px]";
@@ -129,12 +141,11 @@ export function Calendar({
 
       <div className="mt-5 flex flex-wrap items-center justify-between gap-x-3.5 gap-y-2 text-[16px] text-secondary lg:mt-3.5 lg:text-[17px]">
         <span className="flex flex-wrap items-center gap-x-3.5 gap-y-1 lg:gap-x-[18px]">
-          <span className="inline-flex items-center gap-1.5">
-            <Flower kind="poem" size={14} className="lg:size-[15px]" /> poema
-          </span>
-          <span className="inline-flex items-center gap-1.5">
-            <Flower kind="note" size={14} className="lg:size-[15px]" /> nota
-          </span>
+          {ENTRY_KINDS.map((kind) => (
+            <span key={kind} className="inline-flex items-center gap-1.5">
+              <Flower kind={kind} size={14} className="lg:size-[15px]" /> {LEGEND[kind]}
+            </span>
+          ))}
           {mode === "write" && (
             <span className="hidden items-center gap-1.5 lg:inline-flex">
               <span
@@ -154,9 +165,9 @@ export function Calendar({
 const CELL_BASE =
   "flex h-[62px] flex-col items-center gap-[5px] rounded-[10px] pt-[7px] text-[18px] leading-none lg:h-[88px] lg:gap-3 lg:rounded-xl lg:pt-3.5 lg:text-[22px]";
 
-/** Up to three flowers (poems first); with more, one per kind present and the total. */
+/** Up to three flowers (poems, notes, songs); with more, one per kind present and the total. */
 function CellFlowers({ counts }: { counts: KindCounts }) {
-  const total = counts.poem + counts.note;
+  const total = totalCount(counts);
   const flowers: EntryKind[] =
     total <= 3
       ? ENTRY_KINDS.flatMap((kind) => Array<EntryKind>(counts[kind]).fill(kind))
@@ -190,7 +201,7 @@ function DayCell({
   const day = Number(date.slice(8));
   const isToday = date === todayDate;
   const dayLabel = `${shortDate(date)}${isToday ? ", hoy" : ""}`;
-  const total = counts.poem + counts.note;
+  const total = totalCount(counts);
   // The day open next to the calendar (desktop) gets a soft ring unless it's today,
   // which is already framed.
   const current = selected ? "page" : isToday ? "date" : undefined;

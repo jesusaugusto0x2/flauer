@@ -4,9 +4,10 @@ import type { EntryKind } from "@/db/schema";
 const FLOWER_COLORS: Record<EntryKind, { light: string; deep: string }> = {
   poem: { light: "#e9b8c3", deep: "#c25d74" },
   note: { light: "#e6c27a", deep: "#c19a3c" },
+  song: { light: "#b9a9f2", deep: "#7e6cc9" },
 };
 
-/** One entry = one flower: pink for a poem, gold for a note. */
+/** One entry = one flower: pink for a poem, gold for a note, lilac for a song. */
 export function Flower({
   kind = "poem",
   tone = "light",
@@ -42,14 +43,20 @@ export function Flower({
 }
 
 /** Line-drawn flower that decorates the corner of the paper. */
-export function OutlineFlower({ className }: { className?: string }) {
+export function OutlineFlower({
+  className,
+  color = "#8a3b4c",
+}: {
+  className?: string;
+  color?: string;
+}) {
   return (
     <svg
       viewBox="0 0 92 120"
       width={56}
       height={74}
       fill="none"
-      stroke="#8a3b4c"
+      stroke={color}
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"

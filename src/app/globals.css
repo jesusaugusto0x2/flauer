@@ -22,6 +22,15 @@
   --color-note-ink-soft: #5a4a2c;
   --color-note-accent: #6e5212;
 
+  /* Songs: lilac paper and a lilac flower. */
+  --color-lilac: #b9a9f2;
+  --color-lilac-deep: #7e6cc9;
+  --color-song-paper: #ebe7f6;
+  --color-song-ink: #2a2647;
+  --color-song-ink-title: #221f3d;
+  --color-song-ink-soft: #4a4566;
+  --color-song-accent: #4b3f8f;
+
   --font-body: var(--font-cormorant), "Cormorant Garamond", Georgia, serif;
   --font-hand: var(--font-caveat), "Caveat", cursive;
 
@@ -84,8 +93,17 @@ body {
     color: var(--color-note-ink);
   }
 
+  .song-paper {
+    position: relative;
+    border-radius: 4px;
+    background-color: var(--color-song-paper);
+    box-shadow: var(--shadow-paper);
+    color: var(--color-song-ink);
+  }
+
   .paper :focus-visible,
-  .note-paper :focus-visible {
+  .note-paper :focus-visible,
+  .song-paper :focus-visible {
     outline-color: var(--color-wine);
   }
 
@@ -140,4 +158,13 @@ body {
     text-transform: uppercase;
     color: var(--color-secondary);
   }
+}
+
+/* A box that scrolls on its own, with a thin scrollbar that suits the page.
+   Set --scroll-thumb on light paper so the bar stays visible. */
+@utility scroll-area {
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--scroll-thumb, rgba(239, 231, 218, 0.3)) transparent;
+  scrollbar-gutter: stable;
 }

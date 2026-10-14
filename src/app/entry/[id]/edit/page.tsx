@@ -59,6 +59,8 @@ async function Edit({ params }: Pick<PageProps<"/entry/[id]/edit">, "params">) {
           date: entry.date,
           title: entry.title ?? "",
           body: entry.body,
+          artist: entry.artist ?? "",
+          spotifyUrl: entry.spotifyUrl ?? "",
         }}
       />
     </main>

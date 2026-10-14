@@ -1,29 +1,48 @@
 import type { EntryKind } from "@/db/schema";
+import { LOCALE } from "./config";
 import { plural } from "./dates";
 
 // Spanish, user-facing wording for each entry kind. Safe to import on the client.
 
 export type KindCounts = Record<EntryKind, number>;
 
-export const ENTRY_KINDS: EntryKind[] = ["poem", "note"];
+/** Display order everywhere: calendar flowers, legends, counts. */
+export const ENTRY_KINDS: EntryKind[] = ["poem", "note", "song"];
 
 export const isEntryKind = (value: unknown): value is EntryKind =>
-  value === "poem" || value === "note";
+  typeof value === "string" && (ENTRY_KINDS as string[]).includes(value);
 
-export const kindLabel = (kind: EntryKind) => (kind === "poem" ? "Poema" : "Nota");
+export const emptyCounts = (): KindCounts => ({ poem: 0, note: 0, song: 0 });
+
+export const totalCount = (counts: KindCounts) =>
+  ENTRY_KINDS.reduce((sum, kind) => sum + counts[kind], 0);
+
+const WORDS: Record<EntryKind, { label: string; one: string; many: string }> = {
+  poem: { label: "Poema", one: "poema", many: "poemas" },
+  note: { label: "Nota", one: "nota", many: "notas" },
+  song: { label: "Canción", one: "canción", many: "canciones" },
+};
+
+export const kindLabel = (kind: EntryKind) => WORDS[kind].label;
 
 export const countLabel = (kind: EntryKind, n: number) =>
-  kind === "poem" ? plural(n, "poema", "poemas") : plural(n, "nota", "notas");
+  plural(n, WORDS[kind].one, WORDS[kind].many);
 
-/** "3 poemas y 1 nota", "2 notas"… Empty string when there is nothing. */
+const listFormat = new Intl.ListFormat(LOCALE, { type: "conjunction" });
+
+/** "2 poemas, 1 nota y 1 canción". Empty string when there is nothing. */
 export function describeCounts(counts: KindCounts) {
-  return ENTRY_KINDS.filter((k) => counts[k] > 0)
-    .map((k) => countLabel(k, counts[k]))
-    .join(" y ");
+  return listFormat.format(
+    ENTRY_KINDS.filter((k) => counts[k] > 0).map((k) => countLabel(k, counts[k])),
+  );
 }
 
-export const displayTitle = (entry: { title: string | null }) =>
-  entry.title?.trim() || "Sin título";
+/** Heading for an entry. Notes may have no title; songs always have a name. */
+export function displayTitle(entry: { kind: EntryKind; title: string | null }) {
+  const title = entry.title?.trim();
+  if (title) return title;
+  return entry.kind === "note" ? "Nota" : "Sin título";
+}
 
 export function firstLine(body: string) {
   return (

@@ -9,10 +9,11 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 
-export const entryKind = pgEnum("entry_kind", ["poem", "note"]);
+export const entryKind = pgEnum("entry_kind", ["poem", "note", "song"]);
 
-// A diary entry: a poem or a note. Both share the same fields; only how they look
-// and where they can be read differ.
+// A diary entry: a poem, a note or a song. Poems and notes use title and body.
+// Songs use title (the song's name), artist, spotify_url and, optionally, body
+// (why it fits the day).
 export const entries = pgTable(
   "entries",
   {
@@ -22,6 +23,8 @@ export const entries = pgTable(
     date: date("date", { mode: "string" }).notNull(),
     title: text("title"),
     body: text("body").notNull(),
+    artist: text("artist"),
+    spotifyUrl: text("spotify_url"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },

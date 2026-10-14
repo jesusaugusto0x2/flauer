@@ -1,8 +1,8 @@
 # Flauer
 
-A personal diary of poems and notes. Every entry belongs to a day and shows up as a flower
-on the calendar: pink for a poem, gold for a note. Reading is public; only the diary's
-owner can write.
+A personal diary of poems, notes and songs. Every entry belongs to a day and shows up as a
+flower on the calendar: pink for a poem, gold for a note, lilac for a song. Reading is
+public; only the diary's owner can write.
 
 Built with Next.js (App Router, Server Components, Server Actions, Cache Components), Neon
 Postgres, Drizzle ORM, Zod, `jose` and Tailwind CSS. The code is in English; the UI is in
@@ -10,17 +10,39 @@ Spanish.
 
 ## Routes
 
-| Route               | What it does                                                                           |
-| ------------------- | -------------------------------------------------------------------------------------- |
-| `/`                 | Calendar for the current month. `?month=2026-10` shows another.                        |
-| `/day/YYYY-MM-DD`   | Poems and notes for that day. Notes are read in full here.                             |
-| `/poem/[id]`        | Read a poem.                                                                           |
-| `/write?date=…`     | New poem or note (session required). Defaults to today; `&kind=note` starts on a note. |
-| `/entry/[id]/edit`  | Edit a poem or note, or turn one into the other (session required).                    |
-| `/login`, `/logout` | Start and end the session. Nothing links to them.                                      |
+| Route               | What it does                                                                                                       |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `/`                 | Calendar for the current month. `?month=2026-10` shows another.                                                    |
+| `/day/YYYY-MM-DD`   | That day's entries: summaries of poems and notes, and songs with their Spotify link.                               |
+| `/entry/[id]`       | Read a poem or a note (one view, styled by kind). Songs redirect to their card on the day.                         |
+| `/entry/[id]/edit`  | Edit an entry, or change its kind (session required).                                                              |
+| `/write?date=…`     | New entry (session required). Defaults to today and a poem; `&kind=note` or `&kind=song` to start on another kind. |
+| `/login`, `/logout` | Start and end the session. Nothing links to them.                                                                  |
 
-Poems and notes share one `entries` table; the `kind` column (`poem` | `note`) tells them
-apart.
+`/poem/[id]`, the old poem URL, redirects to `/entry/[id]`.
+
+## Entries
+
+Poems, notes and songs share one `entries` table; the `kind` column (`poem` | `note` |
+`song`) tells them apart.
+
+- **Poems and notes** have a date, an optional title and a body.
+- **Songs** have a date, the song's name (`title`), `artist`, `spotify_url` and an
+  optional "why it fits" (`body`, up to 1000 characters). The diary can't read the name
+  or artist from Spotify by itself, so they are typed in.
+
+Spotify links are checked and cleaned in `src/lib/spotify.ts`: `open.spotify.com` links
+(track, album, playlist, episode, show, artist; regional `/intl-xx/` paths and the `?si=`
+share parameter are accepted and dropped), `spotify:track:…` app URIs and `spotify.link`
+short links from the mobile app. Anything else is rejected. On phones with Spotify
+installed, "Abrir en Spotify" opens the app.
+
+## Scrolling
+
+Text boxes have a fixed height and scroll on their own, so long texts don't stretch the
+page. On desktop, the day next to the calendar and the side lists while reading or
+writing fit in the window and scroll inside; the reading sheet does too. On phones the
+page scrolls as usual.
 
 "Today" is always computed in `America/Caracas` (`TIME_ZONE` in `src/lib/config.ts`). The
 app name, subtitle and optional poem signature live in the same file.
@@ -48,7 +70,7 @@ Requires Node 22.12+ (see `.nvmrc`) and pnpm.
 pnpm install
 cp .env.example .env.local   # then fill in the values
 pnpm db:migrate              # creates the tables
-pnpm db:seed                 # optional: sample poems and notes
+pnpm db:seed                 # optional: sample poems, notes and songs
 pnpm dev
 ```
 

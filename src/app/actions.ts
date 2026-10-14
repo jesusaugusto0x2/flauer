@@ -37,7 +37,7 @@ export async function setMode(formData: FormData) {
   if (mode === "read" || mode === "write") await saveMode(mode);
 }
 
-// ── Entries (poems and notes) ───────────────────────────────────────────────
+// ── Entries (poems, notes and songs) ────────────────────────────────────────
 
 export type SaveEntryResult = EntryFormState & { redirectTo?: string };
 
@@ -49,6 +49,8 @@ export async function saveEntry(formData: FormData): Promise<SaveEntryResult> {
     date: String(formData.get("date") ?? ""),
     title: String(formData.get("title") ?? ""),
     body: String(formData.get("body") ?? ""),
+    artist: String(formData.get("artist") ?? ""),
+    spotifyUrl: String(formData.get("spotifyUrl") ?? ""),
   };
   const id = formData.get("id");
 
