@@ -1,26 +1,107 @@
 @import "tailwindcss";
 
+@theme {
+  --color-noche: #15142a;
+  --color-claro: #efe7da;
+  --color-secundario: #b9b0c4;
+  --color-apagado: #8f87a0;
+  --color-rosa: #e9b8c3;
+  --color-vino: #8a3b4c;
+  --color-borde: rgba(239, 231, 218, 0.28);
+  --color-papel: #f4eee3;
+  --color-tinta: #2a2433;
+  --color-tinta-titulo: #221d2b;
+  --color-tinta-suave: #4d4558;
+
+  --font-cuerpo: var(--font-cormorant), "Cormorant Garamond", Georgia, serif;
+  --font-mano: var(--font-caveat), "Caveat", cursive;
+
+  --shadow-papel: 0 14px 30px rgba(0, 0, 0, 0.4);
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: dark;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  background: var(--color-noche);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-noche);
+  color: var(--color-claro);
+  font-family: var(--font-cuerpo);
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-rosa);
+  outline-offset: 3px;
+}
+
+@layer components {
+  /* Hoja de cuaderno: una raya cada 32px. */
+  .papel {
+    position: relative;
+    border-radius: 4px;
+    background-color: var(--color-papel);
+    background-image: repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent 31px,
+      rgba(70, 80, 130, 0.14) 31px,
+      rgba(70, 80, 130, 0.14) 32px
+    );
+    box-shadow: var(--shadow-papel);
+    color: var(--color-tinta);
+  }
+
+  .papel :focus-visible {
+    outline-color: var(--color-vino);
+  }
+
+  .pildora {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4em;
+    border-radius: 999px;
+    border: 1px solid var(--color-borde);
+    padding: 0 1.25rem;
+    font-size: 17px;
+    line-height: 1.2;
+    color: var(--color-claro);
+    transition:
+      background-color 150ms,
+      opacity 150ms;
+  }
+
+  .pildora:hover {
+    background-color: rgba(239, 231, 218, 0.08);
+  }
+
+  .pildora-vino {
+    border-color: var(--color-vino);
+    background-color: var(--color-vino);
+    color: #fff;
+    font-weight: 600;
+  }
+
+  .pildora-vino:hover {
+    background-color: #7a3343;
+  }
+
+  .pildora:disabled,
+  .pildora[aria-disabled="true"] {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+
+  .antetitulo {
+    font-size: 12px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--color-secundario);
+  }
 }
