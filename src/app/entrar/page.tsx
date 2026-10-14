@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { connection } from "next/server";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { Cargando } from "@/components/cargando";
@@ -21,6 +22,7 @@ export default function Entrar() {
 }
 
 async function ContenidoEntrar() {
+  await connection();
   if (await haySesion()) redirect("/");
   return <FormularioEntrar />;
 }

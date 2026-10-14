@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { connection } from "next/server";
 import { Suspense } from "react";
 import { Cargando } from "@/components/cargando";
 import { Flor, Flores } from "@/components/iconos";
@@ -49,6 +50,7 @@ const urlMes = (mes: string, mesActual: string) =>
   mes === mesActual ? "/" : `/?mes=${mes}`;
 
 async function Calendario({ searchParams }: Pick<PageProps<"/">, "searchParams">) {
+  await connection();
   const [{ mes: mesPedido }, { sesion, modo }] = await Promise.all([
     searchParams,
     modoActual(),

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { connection } from "next/server";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { Barra } from "@/components/barra";
@@ -19,6 +20,7 @@ export default function Poema({ params }: PageProps<"/poema/[id]">) {
 const CLASE_NAV = "pildora px-4";
 
 async function ContenidoPoema({ params }: Pick<PageProps<"/poema/[id]">, "params">) {
+  await connection();
   const { id } = await params;
   const poema = await poemaPorId(id);
   if (!poema) notFound();

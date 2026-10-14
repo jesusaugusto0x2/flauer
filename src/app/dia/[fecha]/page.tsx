@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { connection } from "next/server";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { Barra } from "@/components/barra";
@@ -27,6 +28,7 @@ export default function Dia({ params }: PageProps<"/dia/[fecha]">) {
 }
 
 async function ContenidoDia({ params }: Pick<PageProps<"/dia/[fecha]">, "params">) {
+  await connection();
   const { fecha } = await params;
   const fechaHoy = hoy();
   if (!esFechaValida(fecha) || fecha > fechaHoy) notFound();

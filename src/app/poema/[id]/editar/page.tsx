@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { connection } from "next/server";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { Barra } from "@/components/barra";
@@ -22,6 +23,7 @@ export default function Editar({ params }: PageProps<"/poema/[id]/editar">) {
 async function ContenidoEditar({
   params,
 }: Pick<PageProps<"/poema/[id]/editar">, "params">) {
+  await connection();
   const [{ id }, { sesion, modo }] = await Promise.all([params, modoActual()]);
   // Sin sesión, esta página no existe.
   if (!sesion) notFound();

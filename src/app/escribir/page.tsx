@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { connection } from "next/server";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { Barra } from "@/components/barra";
@@ -21,6 +22,7 @@ export default function Escribir({ searchParams }: PageProps<"/escribir">) {
 async function ContenidoEscribir({
   searchParams,
 }: Pick<PageProps<"/escribir">, "searchParams">) {
+  await connection();
   const [{ fecha: pedida }, { sesion, modo }] = await Promise.all([
     searchParams,
     modoActual(),
