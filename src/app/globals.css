@@ -13,6 +13,15 @@
   --color-ink-title: #221d2b;
   --color-ink-soft: #4d4558;
 
+  /* Notes: warm, unruled paper and a gold flower. */
+  --color-gold: #e6c27a;
+  --color-gold-deep: #c19a3c;
+  --color-rose: #c25d74;
+  --color-note-paper: #f3e9cf;
+  --color-note-ink: #3a2f1c;
+  --color-note-ink-soft: #5a4a2c;
+  --color-note-accent: #6e5212;
+
   --font-body: var(--font-cormorant), "Cormorant Garamond", Georgia, serif;
   --font-hand: var(--font-caveat), "Caveat", cursive;
 
@@ -56,8 +65,30 @@ body {
     color: var(--color-ink);
   }
 
-  .paper :focus-visible {
+  .note-paper {
+    position: relative;
+    border-radius: 4px;
+    background-color: var(--color-note-paper);
+    box-shadow: var(--shadow-paper);
+    color: var(--color-note-ink);
+  }
+
+  .paper :focus-visible,
+  .note-paper :focus-visible {
     outline-color: var(--color-wine);
+  }
+
+  /* A poem's textarea carries its own ruling so the lines scroll with the text. */
+  .ruled-field {
+    background-color: var(--color-paper);
+    background-image: repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent 31px,
+      rgba(70, 80, 130, 0.14) 31px,
+      rgba(70, 80, 130, 0.14) 32px
+    );
+    background-attachment: local;
   }
 
   .pill {

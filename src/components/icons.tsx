@@ -1,5 +1,26 @@
-/** One poem = one flower. */
-export function Flower({ size = 12, className }: { size?: number; className?: string }) {
+import type { EntryKind } from "@/db/schema";
+
+// Flower colors per entry kind. "light" is for dark backgrounds, "deep" for paper.
+const FLOWER_COLORS: Record<EntryKind, { light: string; deep: string }> = {
+  poem: { light: "#e9b8c3", deep: "#c25d74" },
+  note: { light: "#e6c27a", deep: "#c19a3c" },
+};
+
+/** One entry = one flower: pink for a poem, gold for a note. */
+export function Flower({
+  kind = "poem",
+  tone = "light",
+  center = "#15142a",
+  size = 12,
+  className,
+}: {
+  kind?: EntryKind;
+  tone?: "light" | "deep";
+  /** Color of the flower's middle; matches the surface it sits on. */
+  center?: string;
+  size?: number;
+  className?: string;
+}) {
   return (
     <svg
       viewBox="0 0 12 12"
@@ -8,14 +29,14 @@ export function Flower({ size = 12, className }: { size?: number; className?: st
       aria-hidden="true"
       className={className}
     >
-      <g fill="#e9b8c3">
+      <g fill={FLOWER_COLORS[kind][tone]}>
         <circle cx="6" cy="3.1" r="2" />
         <circle cx="8.8" cy="5.1" r="2" />
         <circle cx="7.7" cy="8.4" r="2" />
         <circle cx="4.3" cy="8.4" r="2" />
         <circle cx="3.2" cy="5.1" r="2" />
       </g>
-      <circle cx="6" cy="6" r="1.3" fill="#15142a" />
+      <circle cx="6" cy="6" r="1.3" fill={center} />
     </svg>
   );
 }
@@ -43,16 +64,5 @@ export function OutlineFlower({ className }: { className?: string }) {
       <circle cx="46" cy="44" r="3.2" />
       <path d="M46 48 C47 70 44 92 48 116" />
     </svg>
-  );
-}
-
-/** One flower per poem, in a row. */
-export function Flowers({ count, className }: { count: number; className?: string }) {
-  return (
-    <span className={`inline-flex flex-wrap gap-1 ${className ?? ""}`} aria-hidden="true">
-      {Array.from({ length: count }, (_, i) => (
-        <Flower key={i} />
-      ))}
-    </span>
   );
 }

@@ -2,17 +2,17 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { Suspense } from "react";
+import { EntryForm } from "@/components/entry-form";
 import { Loading } from "@/components/loading";
 import { ModeSwitch } from "@/components/mode-switch";
-import { PoemForm } from "@/components/poem-form";
 import { TopBar } from "@/components/top-bar";
 import { shortDate, today } from "@/lib/dates";
-import { getPoem } from "@/lib/poems";
+import { getEntry } from "@/lib/entries";
 import { currentMode } from "@/lib/session";
 
-export const metadata: Metadata = { title: "Editar poema", robots: { index: false } };
+export const metadata: Metadata = { title: "Editar", robots: { index: false } };
 
-export default function EditPage({ params }: PageProps<"/poem/[id]/edit">) {
+export default function EditPage({ params }: PageProps<"/entry/[id]/edit">) {
   return (
     <Suspense fallback={<Loading />}>
       <Edit params={params} />
@@ -20,28 +20,33 @@ export default function EditPage({ params }: PageProps<"/poem/[id]/edit">) {
   );
 }
 
-async function Edit({ params }: Pick<PageProps<"/poem/[id]/edit">, "params">) {
+async function Edit({ params }: Pick<PageProps<"/entry/[id]/edit">, "params">) {
   await connection();
   const [{ id }, { session, mode }] = await Promise.all([params, currentMode()]);
   // Without a session this page doesn't exist.
   if (!session) notFound();
 
-  const poem = await getPoem(id);
-  if (!poem) notFound();
-  const dayHref = `/day/${poem.date}`;
+  const entry = await getEntry(id);
+  if (!entry) notFound();
+  const dayHref = `/day/${entry.date}`;
 
   return (
     <main>
-      <TopBar backHref={dayHref} backLabel={shortDate(poem.date)}>
+      <TopBar backHref={dayHref} backLabel={shortDate(entry.date)}>
         <ModeSwitch mode={mode} />
       </TopBar>
-      <h1 className="font-hand mb-6 text-[44px] leading-tight font-semibold">
-        Editar poema
-      </h1>
-      <PoemForm
+      <EntryForm
+        // Remount when the entry changes so the fields never show an older version.
+        key={`${entry.id}:${entry.updatedAt.getTime()}`}
         today={today()}
         cancelHref={dayHref}
-        poem={{ id: poem.id, date: poem.date, title: poem.title ?? "", body: poem.body }}
+        entry={{
+          id: entry.id,
+          kind: entry.kind,
+          date: entry.date,
+          title: entry.title ?? "",
+          body: entry.body,
+        }}
       />
     </main>
   );

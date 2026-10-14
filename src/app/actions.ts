@@ -3,9 +3,9 @@
 import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
 import { clearAttempts, isCorrectPassword, recordAttempt } from "@/lib/login-guard";
-import { createPoem, deletePoem, isValidId, updatePoem } from "@/lib/poems";
+import { createEntry, deleteEntry, isValidId, updateEntry } from "@/lib/entries";
 import { createSession, hasSession, saveMode } from "@/lib/session";
-import { poemSchema, type PoemField, type PoemFormState } from "@/lib/validation";
+import { entrySchema, type EntryField, type EntryFormState } from "@/lib/validation";
 
 // Messages returned to the UI are in Spanish.
 const NO_SESSION = "Tu sesión expiró. Vuelve a entrar para guardar.";
@@ -37,25 +37,26 @@ export async function setMode(formData: FormData) {
   if (mode === "read" || mode === "write") await saveMode(mode);
 }
 
-// ── Poems ───────────────────────────────────────────────────────────────────
+// ── Entries (poems and notes) ───────────────────────────────────────────────
 
-export type SavePoemResult = PoemFormState & { redirectTo?: string };
+export type SaveEntryResult = EntryFormState & { redirectTo?: string };
 
-export async function savePoem(formData: FormData): Promise<SavePoemResult> {
+export async function saveEntry(formData: FormData): Promise<SaveEntryResult> {
   if (!(await hasSession())) return { error: NO_SESSION };
 
   const values = {
+    kind: String(formData.get("kind") ?? ""),
     date: String(formData.get("date") ?? ""),
     title: String(formData.get("title") ?? ""),
     body: String(formData.get("body") ?? ""),
   };
   const id = formData.get("id");
 
-  const parsed = poemSchema.safeParse(values);
+  const parsed = entrySchema.safeParse(values);
   if (!parsed.success) {
-    const fieldErrors: Partial<Record<PoemField, string>> = {};
+    const fieldErrors: Partial<Record<EntryField, string>> = {};
     for (const issue of parsed.error.issues) {
-      const field = issue.path[0] as PoemField;
+      const field = issue.path[0] as EntryField;
       fieldErrors[field] ??= issue.message;
     }
     return { fieldErrors };
@@ -63,11 +64,11 @@ export async function savePoem(formData: FormData): Promise<SavePoemResult> {
 
   try {
     if (typeof id === "string" && id) {
-      if (!isValidId(id) || !(await updatePoem(id, parsed.data))) {
-        return { error: "Ese poema ya no existe." };
+      if (!isValidId(id) || !(await updateEntry(id, parsed.data))) {
+        return { error: "Esa entrada ya no existe." };
       }
     } else {
-      await createPoem(parsed.data);
+      await createEntry(parsed.data);
     }
   } catch (e) {
     console.error(e);
@@ -77,12 +78,12 @@ export async function savePoem(formData: FormData): Promise<SavePoemResult> {
   return { redirectTo: `/day/${parsed.data.date}` };
 }
 
-export async function removePoem(id: string): Promise<{ error?: string }> {
+export async function removeEntry(id: string): Promise<{ error?: string }> {
   if (!(await hasSession())) return { error: NO_SESSION };
-  if (!isValidId(id)) return { error: "Ese poema ya no existe." };
+  if (!isValidId(id)) return { error: "Esa entrada ya no existe." };
 
   try {
-    await deletePoem(id);
+    await deleteEntry(id);
   } catch (e) {
     console.error(e);
     return { error: "No se pudo borrar. Inténtalo de nuevo." };

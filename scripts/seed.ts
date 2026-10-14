@@ -1,15 +1,15 @@
 /**
- * Fills the database with sample poems. LOCAL DEVELOPMENT ONLY.
+ * Fills the database with sample poems and notes. LOCAL DEVELOPMENT ONLY.
  *
  *   pnpm db:seed
  *
- * Refuses to run in production, on Vercel, or against a database that already has poems.
+ * Refuses to run in production, on Vercel, or against a database that already has entries.
  */
 import { neon } from "@neondatabase/serverless";
 import { config } from "dotenv";
 import { count } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/neon-http";
-import { poems } from "../src/db/schema";
+import { entries, type EntryKind } from "../src/db/schema";
 import { today } from "../src/lib/dates";
 
 config({ path: [".env.local", ".env"], quiet: true });
@@ -35,7 +35,12 @@ function daysAgo(n: number) {
 }
 
 // Sample content is in Spanish, like the diary itself.
-const samples: { daysAgo: number; title: string | null; body: string }[] = [
+const samples: {
+  kind?: EntryKind;
+  daysAgo: number;
+  title: string | null;
+  body: string;
+}[] = [
   {
     daysAgo: 0,
     title: "Lo que dejó la lluvia",
@@ -86,22 +91,44 @@ const samples: { daysAgo: number; title: string | null; body: string }[] = [
     title: "El mes pasado",
     body: "Lo que fui el mes pasado\nme mira desde el calendario\ncon una flor en la mano\ny cara de no arrepentirse.",
   },
+  {
+    kind: "note",
+    daysAgo: 0,
+    title: null,
+    body: "Hoy vi la primera flor del jazmín. Quería contártelo antes de que se me olvidara.",
+  },
+  {
+    kind: "note",
+    daysAgo: 2,
+    title: "Para acordarme",
+    body: "Comprar el cuaderno azul.\nLlamar a mamá el domingo.",
+  },
+  {
+    kind: "note",
+    daysAgo: 9,
+    title: null,
+    body: "No escribí poema. Fue un día largo y solo quería dormir.",
+  },
 ];
 
 async function main() {
   const db = drizzle(neon(process.env.DATABASE_URL!));
 
-  const [{ total }] = await db.select({ total: count() }).from(poems);
-  if (total > 0)
-    abort(`the database already has ${total} poems; seeding only fills empty ones.`);
+  const [{ total }] = await db.select({ total: count() }).from(entries);
+  if (total > 0) {
+    abort(`the database already has ${total} entries; seeding only fills empty ones.`);
+  }
 
   // Inserted one by one so created_at keeps the order within each day.
   for (const s of samples) {
-    await db
-      .insert(poems)
-      .values({ date: daysAgo(s.daysAgo), title: s.title, body: s.body });
+    await db.insert(entries).values({
+      kind: s.kind ?? "poem",
+      date: daysAgo(s.daysAgo),
+      title: s.title,
+      body: s.body,
+    });
   }
-  console.log(`✓ Created ${samples.length} sample poems.`);
+  console.log(`✓ Created ${samples.length} sample entries.`);
 }
 
 main().catch((error) => {

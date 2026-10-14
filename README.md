@@ -1,7 +1,8 @@
 # Flauer
 
-A personal diary of poems. Every poem belongs to a day and shows up as a flower on the
-calendar. Reading is public; only the diary's owner can write.
+A personal diary of poems and notes. Every entry belongs to a day and shows up as a flower
+on the calendar: pink for a poem, gold for a note. Reading is public; only the diary's
+owner can write.
 
 Built with Next.js (App Router, Server Components, Server Actions, Cache Components), Neon
 Postgres, Drizzle ORM, Zod, `jose` and Tailwind CSS. The code is in English; the UI is in
@@ -9,14 +10,17 @@ Spanish.
 
 ## Routes
 
-| Route               | What it does                                                    |
-| ------------------- | --------------------------------------------------------------- |
-| `/`                 | Calendar for the current month. `?month=2026-10` shows another. |
-| `/day/YYYY-MM-DD`   | Poems for that day.                                             |
-| `/poem/[id]`        | Read a poem.                                                    |
-| `/write?date=…`     | New poem (session required). Defaults to today.                 |
-| `/poem/[id]/edit`   | Edit a poem (session required).                                 |
-| `/login`, `/logout` | Start and end the session. Nothing links to them.               |
+| Route               | What it does                                                                           |
+| ------------------- | -------------------------------------------------------------------------------------- |
+| `/`                 | Calendar for the current month. `?month=2026-10` shows another.                        |
+| `/day/YYYY-MM-DD`   | Poems and notes for that day. Notes are read in full here.                             |
+| `/poem/[id]`        | Read a poem.                                                                           |
+| `/write?date=…`     | New poem or note (session required). Defaults to today; `&kind=note` starts on a note. |
+| `/entry/[id]/edit`  | Edit a poem or note, or turn one into the other (session required).                    |
+| `/login`, `/logout` | Start and end the session. Nothing links to them.                                      |
+
+Poems and notes share one `entries` table; the `kind` column (`poem` | `note`) tells them
+apart.
 
 "Today" is always computed in `America/Caracas` (`TIME_ZONE` in `src/lib/config.ts`). The
 app name, subtitle and optional poem signature live in the same file.
@@ -44,7 +48,7 @@ Requires Node 22.12+ (see `.nvmrc`) and pnpm.
 pnpm install
 cp .env.example .env.local   # then fill in the values
 pnpm db:migrate              # creates the tables
-pnpm db:seed                 # optional: ~10 sample poems
+pnpm db:seed                 # optional: sample poems and notes
 pnpm dev
 ```
 
@@ -52,7 +56,7 @@ For development, use your own **Neon branch** rather than the production databas
 console: _Branches → New branch_) and put its connection string in `.env.local`.
 
 `pnpm db:seed` is for development only: it refuses to run with `NODE_ENV=production`, on
-Vercel, or against a database that already has poems.
+Vercel, or against a database that already has entries.
 
 Other scripts:
 

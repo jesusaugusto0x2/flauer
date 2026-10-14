@@ -1,22 +1,22 @@
 import Link from "next/link";
 import { connection } from "next/server";
 import { Suspense } from "react";
-import { Flower, Flowers } from "@/components/icons";
+import { Flower } from "@/components/icons";
 import { Loading } from "@/components/loading";
 import { ModeSwitch } from "@/components/mode-switch";
 import { APP_NAME, APP_SUBTITLE } from "@/lib/config";
+import type { EntryKind } from "@/db/schema";
 import {
   addMonths,
   isValidMonth,
-  monthName,
   monthOf,
   monthTitle,
-  plural,
   shortDate,
   today,
   weeksOfMonth,
 } from "@/lib/dates";
-import { countByDay, countOnDay } from "@/lib/poems";
+import { countByDay, countOnDay } from "@/lib/entries";
+import { countLabel, describeCounts, ENTRY_KINDS, type KindCounts } from "@/lib/kinds";
 import { currentMode, type Mode } from "@/lib/session";
 
 const WEEKDAYS = [
@@ -34,10 +34,10 @@ export default function Home({ searchParams }: PageProps<"/">) {
     <main>
       <header className="pt-4 text-center">
         <p className="eyebrow">Diario de poemas</p>
-        <h1 className="font-hand mt-1 text-[64px] leading-none font-semibold">
+        <h1 className="mt-1 font-hand text-[64px] leading-none font-semibold">
           {APP_NAME}
         </h1>
-        <p className="text-secondary mt-2 text-[17px] italic">{APP_SUBTITLE}</p>
+        <p className="mt-2 text-[17px] text-secondary italic">{APP_SUBTITLE}</p>
       </header>
       <Suspense fallback={<Loading />}>
         <Calendar searchParams={searchParams} />
@@ -66,8 +66,18 @@ async function Calendar({ searchParams }: Pick<PageProps<"/">, "searchParams">) 
     countByDay(month),
     month === currentMonth ? undefined : countOnDay(todayDate),
   ]);
-  const todayCount = todayCountElsewhere ?? counts[todayDate] ?? 0;
-  const monthTotal = Object.values(counts).reduce((a, b) => a + b, 0);
+  const todayCounts = counts[todayDate];
+  const todayCount =
+    todayCountElsewhere ?? (todayCounts ? todayCounts.poem + todayCounts.note : 0);
+  const monthTotals: KindCounts = { poem: 0, note: 0 };
+  for (const day of Object.values(counts)) {
+    monthTotals.poem += day.poem;
+    monthTotals.note += day.note;
+  }
+  const monthSummary =
+    monthTotals.note > 0
+      ? `${countLabel("poem", monthTotals.poem)} · ${countLabel("note", monthTotals.note)}`
+      : countLabel("poem", monthTotals.poem);
   const previous = addMonths(month, -1);
   const next = addMonths(month, 1);
   const isCurrentMonth = month === currentMonth;
@@ -123,7 +133,7 @@ async function Calendar({ searchParams }: Pick<PageProps<"/">, "searchParams">) 
             <abbr
               key={d.short}
               title={d.long}
-              className="text-secondary text-center text-[13px] no-underline"
+              className="text-center text-[13px] text-secondary no-underline"
             >
               {d.short}
             </abbr>
@@ -141,7 +151,7 @@ async function Calendar({ searchParams }: Pick<PageProps<"/">, "searchParams">) 
                 {date && (
                   <DayCell
                     date={date}
-                    count={counts[date] ?? 0}
+                    counts={counts[date] ?? NO_ENTRIES}
                     todayDate={todayDate}
                     mode={mode}
                   />
@@ -150,25 +160,28 @@ async function Calendar({ searchParams }: Pick<PageProps<"/">, "searchParams">) 
             ))}
         </ol>
 
-        <div className="text-secondary mt-5 flex items-center justify-between text-[16px]">
-          <span className="inline-flex items-center gap-2">
-            <Flower /> <span>= un poema</span>
+        <div className="mt-5 flex flex-wrap items-center justify-between gap-x-3.5 gap-y-2 text-[16px] text-secondary">
+          <span className="flex items-center gap-3.5">
+            <span className="inline-flex items-center gap-1.5">
+              <Flower kind="poem" size={14} /> poema
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <Flower kind="note" size={14} /> nota
+            </span>
           </span>
-          <span className="italic">
-            {plural(monthTotal, "poema", "poemas")} en {monthName(month)}
-          </span>
+          <span className="italic">{monthSummary}</span>
         </div>
       </section>
 
       <div className="mt-10 flex justify-center">
         {mode === "write" ? (
           <Link href="/write" className="pill pill-wine px-6">
-            + Escribir el poema de hoy
+            + Escribir hoy
           </Link>
         ) : (
           todayCount > 0 && (
             <Link href={`/day/${todayDate}`} className="pill px-6">
-              Leer los poemas de hoy <span aria-hidden="true">→</span>
+              Leer lo de hoy <span aria-hidden="true">→</span>
             </Link>
           )
         )}
@@ -180,20 +193,41 @@ async function Calendar({ searchParams }: Pick<PageProps<"/">, "searchParams">) 
 const CELL_BASE =
   "flex h-[62px] flex-col items-center gap-[5px] rounded-[10px] pt-[7px] text-[18px] leading-none";
 
+const NO_ENTRIES: KindCounts = { poem: 0, note: 0 };
+
+/** Up to three flowers (poems first); with more, one per kind present and the total. */
+function CellFlowers({ counts }: { counts: KindCounts }) {
+  const total = counts.poem + counts.note;
+  const flowers: EntryKind[] =
+    total <= 3
+      ? ENTRY_KINDS.flatMap((kind) => Array<EntryKind>(counts[kind]).fill(kind))
+      : ENTRY_KINDS.filter((kind) => counts[kind] > 0);
+
+  return (
+    <span className="inline-flex items-center gap-px" aria-hidden="true">
+      {flowers.map((kind, i) => (
+        <Flower key={i} kind={kind} />
+      ))}
+      {total > 3 && <span className="ml-0.5 text-[12px] text-light">{total}</span>}
+    </span>
+  );
+}
+
 function DayCell({
   date,
-  count,
+  counts,
   todayDate,
   mode,
 }: {
   date: string;
-  count: number;
+  counts: KindCounts;
   todayDate: string;
   mode: Mode;
 }) {
   const day = Number(date.slice(8));
   const isToday = date === todayDate;
   const dayLabel = `${shortDate(date)}${isToday ? ", hoy" : ""}`;
+  const total = counts.poem + counts.note;
 
   if (date > todayDate) {
     return (
@@ -207,26 +241,19 @@ function DayCell({
     );
   }
 
-  if (count > 0) {
+  if (total > 0) {
     return (
       <Link
         href={`/day/${date}`}
-        aria-label={`${dayLabel}: ${plural(count, "poema", "poemas")}`}
+        aria-label={`${dayLabel}: ${describeCounts(counts)}`}
         className={`${CELL_BASE} ${
           isToday
-            ? "border-pink bg-pink/14 border font-semibold text-white"
+            ? "border border-pink bg-pink/14 font-semibold text-white"
             : "bg-light/7 hover:bg-light/12"
         }`}
       >
         <span>{day}</span>
-        {count <= 3 ? (
-          <Flowers count={count} className="justify-center gap-[2px]" />
-        ) : (
-          <span className="inline-flex items-center gap-[3px]" aria-hidden="true">
-            <Flower />
-            <span className="text-pink text-[12px]">{count}</span>
-          </span>
-        )}
+        <CellFlowers counts={counts} />
       </Link>
     );
   }
@@ -239,13 +266,13 @@ function DayCell({
     return (
       <Link
         href={`/write?date=${date}`}
-        aria-label={`${dayLabel}: sin poemas. Escribir uno`}
+        aria-label={`${dayLabel}: sin entradas. Escribir algo`}
         className={`${CELL_BASE} ${todayClass} ${
-          isToday ? "" : "border-light/25 border border-dashed"
+          isToday ? "" : "border border-dashed border-light/25"
         } hover:bg-light/7`}
       >
         <span>{day}</span>
-        <span className="text-secondary text-[15px]" aria-hidden="true">
+        <span className="text-[15px] text-secondary" aria-hidden="true">
           +
         </span>
       </Link>
@@ -255,7 +282,7 @@ function DayCell({
   return (
     <div
       role="img"
-      aria-label={`${dayLabel}: sin poemas`}
+      aria-label={`${dayLabel}: sin entradas`}
       className={`${CELL_BASE} ${todayClass}`}
     >
       {day}
