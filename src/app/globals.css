@@ -43,9 +43,12 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-:focus-visible {
-  outline: 2px solid var(--color-pink);
-  outline-offset: 3px;
+/* In the base layer so the darker ring on paper (components layer) can win. */
+@layer base {
+  :focus-visible {
+    outline: 2px solid var(--color-pink);
+    outline-offset: 3px;
+  }
 }
 
 @layer components {
