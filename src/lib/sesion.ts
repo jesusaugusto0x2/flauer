@@ -16,9 +16,9 @@ function clave() {
 }
 
 export async function crearSesion() {
-  const token = await new SignJWT({ rol: "duena" })
+  const token = await new SignJWT({ rol: "owner" })
     .setProtectedHeader({ alg: "HS256" })
-    .setSubject("duena")
+    .setSubject("owner")
     .setIssuedAt()
     .setExpirationTime(`${DURACION_SESION_DIAS}d`)
     .sign(clave());
@@ -44,7 +44,7 @@ export async function haySesion(): Promise<boolean> {
   if (!token) return false;
   try {
     const { payload } = await jwtVerify(token, clave(), { algorithms: ["HS256"] });
-    return payload.sub === "duena";
+    return payload.sub === "owner";
   } catch {
     return false;
   }
