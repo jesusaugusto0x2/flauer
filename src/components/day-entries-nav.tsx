@@ -10,19 +10,14 @@ const ROW_STYLE: Record<EntryKind, { color: string; font: string; current: strin
   song: { color: "text-lilac", font: "italic", current: "bg-lilac/15" },
 };
 
-/**
- * Desktop side list of a day's entries. Poems and notes open their own page;
- * songs live on their day, so they link to their card there.
- */
+/** Desktop side list of a day's entries; each one opens its own page. */
 export function DayEntriesNav({
-  date,
   entries,
   currentId,
   label,
   dense = false,
   className = "",
 }: {
-  date: string;
   entries: Pick<Entry, "id" | "kind" | "title">[];
   currentId?: string;
   label: string;
@@ -55,9 +50,7 @@ export function DayEntriesNav({
                 </span>
               ) : (
                 <Link
-                  href={
-                    e.kind === "song" ? `/day/${date}#entry-${e.id}` : `/entry/${e.id}`
-                  }
+                  href={`/entry/${e.id}`}
                   className={`${row} ${style.color} ${style.font} hover:bg-light/7`}
                 >
                   {content}

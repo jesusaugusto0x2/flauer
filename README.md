@@ -1,8 +1,8 @@
 # Flauer
 
-A personal diary of poems, notes and songs. Every entry belongs to a day and shows up as a
-flower on the calendar: pink for a poem, gold for a note, lilac for a song. Reading is
-public; only the diary's owner can write.
+A personal diary of poems, notes and songs. Every entry belongs to a day; on the calendar,
+each day shows one flower per kind it has: pink for poems, gold for notes, lilac for songs.
+Reading is public; only the diary's owner can write.
 
 Built with Next.js (App Router, Server Components, Server Actions, Cache Components), Neon
 Postgres, Drizzle ORM, Zod, `jose` and Tailwind CSS. The code is in English; the UI is in
@@ -13,8 +13,8 @@ Spanish.
 | Route               | What it does                                                                                                       |
 | ------------------- | ------------------------------------------------------------------------------------------------------------------ |
 | `/`                 | Calendar for the current month. `?month=2026-10` shows another.                                                    |
-| `/day/YYYY-MM-DD`   | That day's entries: summaries of poems and notes, and songs with their Spotify link.                               |
-| `/entry/[id]`       | Read a poem or a note (one view, styled by kind). Songs redirect to their card on the day.                         |
+| `/day/YYYY-MM-DD`   | That day's entries as summaries; each opens its own page, and songs also open on Spotify.                          |
+| `/entry/[id]`       | Read a poem, a note or a song (one view, styled by kind).                                                          |
 | `/entry/[id]/edit`  | Edit an entry, or change its kind (session required).                                                              |
 | `/write?date=…`     | New entry (session required). Defaults to today and a poem; `&kind=note` or `&kind=song` to start on another kind. |
 | `/login`, `/logout` | Start and end the session. Nothing links to them.                                                                  |

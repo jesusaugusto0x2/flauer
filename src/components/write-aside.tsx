@@ -27,7 +27,6 @@ export function WriteAside({
             Ya escribiste este día:
           </p>
           <DayEntriesNav
-            date={date}
             entries={entries}
             currentId={currentId}
             label="Entradas de este día"

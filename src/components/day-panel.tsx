@@ -103,7 +103,7 @@ export function DayPanel({
           className={`mt-6 flex flex-col gap-3.5 lg:mt-[18px] lg:gap-[18px] ${LIST_SCROLL}`}
         >
           {summaries.map((e) => (
-            <li key={e.id} id={`entry-${e.id}`} className="scroll-mt-4">
+            <li key={e.id}>
               <EntryCard entry={e} />
             </li>
           ))}

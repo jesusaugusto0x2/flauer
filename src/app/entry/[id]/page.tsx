@@ -1,10 +1,10 @@
 import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { DayEntriesNav, SideColumnHeader } from "@/components/day-entries-nav";
 import { DesktopHeader } from "@/components/desktop-header";
-import { KIND_THEME } from "@/components/entry-cards";
+import { KIND_THEME, SpotifyLink } from "@/components/entry-cards";
 import { OutlineFlower } from "@/components/icons";
 import { Loading } from "@/components/loading";
 import { SIDE_COLUMN } from "@/components/side-column";
@@ -24,8 +24,9 @@ export default function EntryPage({ params }: PageProps<"/entry/[id]">) {
 }
 
 /**
- * One reading view for poems and notes; only the look changes. Poems sit on
- * ruled paper with the text on the lines; notes on warm, unruled paper.
+ * One reading view for poems, notes and songs; only the look changes. Poems sit
+ * on ruled paper with the text on the lines; notes on warm, unruled paper; songs
+ * on lilac paper, with their artist and the way to Spotify.
  */
 const READER = {
   poem: {
@@ -48,6 +49,15 @@ const READER = {
     navLabel: "Notas de este día",
     next: "Siguiente nota",
   },
+  song: {
+    sheet: "song-paper",
+    scrollThumb: "[--scroll-thumb:rgba(42,38,71,0.35)]",
+    meta: "leading-8",
+    title: "mt-1 leading-[1.15]",
+    body: "mt-5 text-[19px] leading-[1.6] lg:mt-7 lg:text-[21px]",
+    navLabel: "Canciones de este día",
+    next: "Siguiente canción",
+  },
 } as const;
 
 const NAV_PILL = "pill px-4 lg:px-[18px] lg:text-[18px]";
@@ -57,8 +67,6 @@ async function EntryReader({ params }: Pick<PageProps<"/entry/[id]">, "params">)
   const [{ id }, { session, mode }] = await Promise.all([params, currentMode()]);
   const entry = await getEntry(id);
   if (!entry) notFound();
-  // Songs are read on their day, where their card opens Spotify.
-  if (entry.kind === "song") redirect(`/day/${entry.date}#entry-${entry.id}`);
 
   const kind = entry.kind;
   const look = READER[kind];
@@ -90,7 +98,6 @@ async function EntryReader({ params }: Pick<PageProps<"/entry/[id]">, "params">)
             date={entry.date}
           />
           <DayEntriesNav
-            date={entry.date}
             entries={dayEntries}
             currentId={entry.id}
             label="Entradas de este día"
@@ -119,9 +126,21 @@ async function EntryReader({ params }: Pick<PageProps<"/entry/[id]">, "params">)
             >
               {displayTitle(entry)}
             </h1>
-            <div className={`whitespace-pre-line ${theme.text} ${look.body}`}>
-              {entry.body}
-            </div>
+            {kind === "song" && entry.artist && (
+              <p className={`mt-1 text-[20px] italic lg:text-[24px] ${theme.soft}`}>
+                {entry.artist}
+              </p>
+            )}
+            {entry.body && (
+              <div className={`whitespace-pre-line ${theme.text} ${look.body}`}>
+                {entry.body}
+              </div>
+            )}
+            {kind === "song" && entry.spotifyUrl && (
+              <p className="mt-6 lg:mt-8">
+                <SpotifyLink url={entry.spotifyUrl} name={displayTitle(entry)} />
+              </p>
+            )}
             {kind === "poem" && SIGNATURE && (
               <p className="mt-8 text-right font-hand text-[24px] leading-8 font-semibold text-wine lg:mt-[38px] lg:text-[30px] lg:leading-[38px]">
                 {SIGNATURE}

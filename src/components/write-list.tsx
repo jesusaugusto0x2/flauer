@@ -80,8 +80,7 @@ export function WriteList({
             return (
               <li
                 key={e.id}
-                id={`entry-${e.id}`}
-                className={`${theme.paper} ${CARD_LAYOUT} scroll-mt-4 transition-opacity ${dimmed ? "opacity-60" : ""}`}
+                className={`${theme.paper} ${CARD_LAYOUT} transition-opacity ${dimmed ? "opacity-60" : ""}`}
               >
                 <KindTag kind={e.kind} />
                 <EntryContent entry={e} />
@@ -210,7 +209,9 @@ function EntryContent({ entry }: { entry: EntrySummary }) {
   return (
     <>
       <h2 className={`text-[24px] leading-[1.15] font-semibold ${theme.title}`}>
-        {displayTitle(entry)}
+        <Link href={`/entry/${entry.id}`} className={link}>
+          {displayTitle(entry)}
+        </Link>
       </h2>
       {entry.artist && (
         <p className={`text-[18px] italic ${theme.soft}`}>{entry.artist}</p>

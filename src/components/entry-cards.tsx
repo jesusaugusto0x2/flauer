@@ -87,10 +87,12 @@ export function SpotifyLink({
   url,
   name,
   compact = false,
+  className = "",
 }: {
   url: string;
   name: string;
   compact?: boolean;
+  className?: string;
 }) {
   const label = compact ? "Spotify" : "Abrir en Spotify";
   return (
@@ -100,8 +102,8 @@ export function SpotifyLink({
       rel="noopener noreferrer"
       aria-label={`${label}: ${name} (se abre en otra pestaña)`}
       className={`pill min-h-11 border-song-accent bg-song-accent text-white hover:bg-[#3d3375] ${
-        compact ? "px-3.5 text-[15px]" : "self-start px-4 text-[16px]"
-      }`}
+        compact ? "px-3.5 text-[15px]" : "px-4 text-[16px]"
+      } ${className}`}
     >
       {label} <span aria-hidden="true">↗</span>
     </a>
@@ -109,36 +111,56 @@ export function SpotifyLink({
 }
 
 /**
- * Reading mode. Poems and notes show a summary and open their own page; songs
- * show everything they have, plus the way to Spotify.
+ * Stretches a link over its whole card (paper is position: relative), so the
+ * card opens like the others while a button raised above it still works. The
+ * focus ring goes around the card.
+ */
+const STRETCHED_LINK =
+  "after:absolute after:inset-0 after:rounded-[4px] focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:outline-offset-3 focus-visible:after:outline-pink";
+
+/**
+ * Reading mode: a summary that opens the entry's own page. A note is cut at
+ * three lines and a song's "why" at two; the page shows them whole.
  */
 export function EntryCard({ entry }: { entry: EntrySummary }) {
   const theme = KIND_THEME[entry.kind];
 
   if (entry.kind === "song") {
+    // A link can't hold the Spotify button, so the song's name is the link.
     return (
       <article className={`${theme.paper} ${CARD_LAYOUT}`}>
         <KindTag kind="song" />
-        <p
-          className={`text-[24px] leading-[1.15] font-semibold lg:text-[25px] ${theme.title}`}
+        <Link
+          href={`/entry/${entry.id}`}
+          className={`text-[24px] leading-[1.15] font-semibold lg:text-[25px] ${theme.title} ${STRETCHED_LINK}`}
         >
           {displayTitle(entry)}
-        </p>
+        </Link>
         {entry.artist && (
           <p className={`text-[18px] italic ${theme.soft}`}>{entry.artist}</p>
         )}
         {entry.body && (
           <p
-            className={`mt-1.5 text-[17px] leading-[1.45] whitespace-pre-line ${theme.text}`}
+            className={`mt-1.5 line-clamp-2 text-[17px] leading-[1.45] whitespace-pre-line ${theme.text}`}
           >
             {entry.body}
           </p>
         )}
-        {entry.spotifyUrl && (
-          <div className="mt-1.5">
-            <SpotifyLink url={entry.spotifyUrl} name={displayTitle(entry)} />
-          </div>
-        )}
+        <div className="mt-1.5 flex items-center justify-between gap-3">
+          {entry.spotifyUrl && (
+            <SpotifyLink
+              url={entry.spotifyUrl}
+              name={displayTitle(entry)}
+              className="relative z-10"
+            />
+          )}
+          <span
+            aria-hidden="true"
+            className={`ml-auto text-[17px] font-semibold ${theme.accent}`}
+          >
+            Leer →
+          </span>
+        </div>
       </article>
     );
   }

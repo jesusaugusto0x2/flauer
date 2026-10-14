@@ -165,22 +165,16 @@ export function Calendar({
 const CELL_BASE =
   "flex h-[62px] flex-col items-center gap-[5px] rounded-[10px] pt-[7px] text-[18px] leading-none lg:h-[88px] lg:gap-3 lg:rounded-xl lg:pt-3.5 lg:text-[22px]";
 
-/** Up to three flowers (poems, notes, songs); with more, one per kind present and the total. */
+/**
+ * One flower per kind the day has, however many entries there are: three songs
+ * show one lilac flower. The exact counts are in the cell's label and on the day.
+ */
 function CellFlowers({ counts }: { counts: KindCounts }) {
-  const total = totalCount(counts);
-  const flowers: EntryKind[] =
-    total <= 3
-      ? ENTRY_KINDS.flatMap((kind) => Array<EntryKind>(counts[kind]).fill(kind))
-      : ENTRY_KINDS.filter((kind) => counts[kind] > 0);
-
   return (
     <span className="inline-flex items-center gap-px lg:gap-0.5" aria-hidden="true">
-      {flowers.map((kind, i) => (
-        <Flower key={i} kind={kind} className="lg:size-[15px]" />
+      {ENTRY_KINDS.filter((kind) => counts[kind] > 0).map((kind) => (
+        <Flower key={kind} kind={kind} className="lg:size-[15px]" />
       ))}
-      {total > 3 && (
-        <span className="ml-0.5 text-[12px] text-light lg:text-[14px]">{total}</span>
-      )}
     </span>
   );
 }
