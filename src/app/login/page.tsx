@@ -10,7 +10,7 @@ export const metadata: Metadata = { title: "Entrar", robots: { index: false } };
 
 export default function LoginPage() {
   return (
-    <main className="pt-16">
+    <main className="pt-16 lg:mx-auto lg:max-w-[408px]">
       <h1 className="text-center font-hand text-[46px] leading-tight font-semibold">
         Entrar
       </h1>

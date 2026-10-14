@@ -48,7 +48,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="es" className={`${cormorant.variable} ${caveat.variable}`}>
       <body className="min-h-dvh">
-        <div className="mx-auto w-full max-w-[440px] px-4 pt-6 pb-16">{children}</div>
+        {/* A ~440px column on phones and tablets; a wider page from 1024px up. */}
+        <div className="mx-auto w-full max-w-[440px] px-4 pt-6 pb-16 lg:max-w-[1248px] lg:px-6 lg:pt-8 lg:pb-14">
+          {children}
+        </div>
       </body>
     </html>
   );

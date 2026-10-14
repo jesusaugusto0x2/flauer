@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useLayoutEffect, useState, useTransition } from "react";
 import { removeEntry } from "@/app/actions";
-import { CARD_CLASS, KindTag, NoteBody } from "@/components/entry-cards";
+import { CARD_CLASS, KindTag, NoteBody } from "./entry-cards";
 import type { EntryKind } from "@/db/schema";
 
 type EntrySummary = {

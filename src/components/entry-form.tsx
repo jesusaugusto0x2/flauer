@@ -9,6 +9,7 @@ import {
   useSyncExternalStore,
   useTransition,
   type FormEvent,
+  type ReactNode,
 } from "react";
 import { saveEntry, type SaveEntryResult } from "@/app/actions";
 import type { EntryKind } from "@/db/schema";
@@ -26,6 +27,8 @@ type Props = {
   initialDate?: string;
   initialKind?: EntryKind;
   cancelHref?: string;
+  /** Desktop side column (the day being written and what's already in it). */
+  aside?: ReactNode;
 };
 
 const DRAFT_DELAY_MS = 600;
@@ -33,8 +36,11 @@ const DRAFT_DELAY_MS = 600;
 // Everything that changes with the kind of entry: paper, colors and wording.
 const LOOK = {
   poem: {
-    paper: "paper",
+    // Poems get wider ruling on desktop, matching the bigger type.
+    paper: "paper lg:[--rule:38px]",
     ink: "text-ink",
+    heading: "text-ink-title",
+    paperColor: "#f4eee3",
     label: "text-wine",
     field: "border-ink/25 text-ink placeholder:text-ink-soft/70",
     inputBg: "bg-white/55",
@@ -43,7 +49,8 @@ const LOOK = {
     switchOff: "text-ink-soft",
     switchOnCenter: "#2a2433",
     switchOffCenter: "#e8e2d6",
-    body: "ruled-field min-h-80 py-0 leading-8",
+    body: "ruled-field min-h-80 py-0 leading-8 lg:min-h-[456px] lg:text-[23px] lg:leading-[38px]",
+    title: "text-[22px] font-semibold lg:text-[24px]",
     save: "pill-wine",
     cancel: "border-ink/30 text-ink-soft hover:bg-ink/5",
     titleLabel: "Título",
@@ -53,6 +60,8 @@ const LOOK = {
   note: {
     paper: "note-paper",
     ink: "text-note-ink",
+    heading: "text-note-ink",
+    paperColor: "#f3e9cf",
     label: "text-note-accent",
     field: "border-note-ink/25 text-note-ink placeholder:text-note-ink-soft/70",
     inputBg: "bg-white/50",
@@ -61,7 +70,8 @@ const LOOK = {
     switchOff: "text-note-ink-soft",
     switchOnCenter: "#3a2f1c",
     switchOffCenter: "#e6dcc3",
-    body: "min-h-[180px] bg-white/35 py-2.5 leading-normal",
+    body: "min-h-[180px] bg-white/35 py-2.5 leading-normal lg:min-h-[240px] lg:py-3 lg:text-[21px]",
+    title: "text-[20px] lg:text-[21px]",
     save: "border-note-accent bg-note-accent font-semibold text-white hover:bg-[#5c440f]",
     cancel: "border-note-ink/30 text-note-ink-soft hover:bg-note-ink/5",
     titleLabel: "Título (opcional)",
@@ -96,7 +106,14 @@ function parseDraft(stored: string | null): Partial<Draft> | null {
   }
 }
 
-export function EntryForm({ today, entry, initialDate, initialKind, cancelHref }: Props) {
+export function EntryForm({
+  today,
+  entry,
+  initialDate,
+  initialKind,
+  cancelHref,
+  aside,
+}: Props) {
   const router = useRouter();
   const form = useRef<HTMLFormElement>(null);
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -197,147 +214,180 @@ export function EntryForm({ today, entry, initialDate, initialKind, cancelHref }
 
   const errors = result.fieldErrors ?? {};
   const labelClass = `block font-hand text-[22px] leading-tight font-semibold ${look.label}`;
-  const fieldClass = `block w-full rounded-[4px] border px-3 ${look.field}`;
+  const fieldClass = `block w-full rounded-[4px] border px-3 lg:px-3.5 ${look.field}`;
+  const title = heading(kind, !!entry);
 
+  // Phones: heading, then the form on paper, then the hint. Desktop: a side column
+  // (aside + hint) next to a wider sheet that carries its own heading.
   return (
-    <>
-      <h1 className="mb-5 flex items-center gap-2.5 font-hand text-[44px] leading-[1.05] font-semibold">
-        <Flower kind={kind} size={26} />
-        {heading(kind, !!entry)}
-      </h1>
+    <div className="lg:flex lg:flex-wrap lg:items-start lg:gap-12">
+      {aside && (
+        <aside
+          aria-label="Este día"
+          className="hidden min-w-0 flex-col gap-[18px] lg:flex lg:flex-[1_1_280px]"
+        >
+          {aside}
+          <p className="text-[15px] text-secondary italic">{look.hint}</p>
+        </aside>
+      )}
 
-      <form
-        ref={form}
-        onSubmit={submit}
-        onInput={saveDraft}
-        noValidate
-        className={`${look.paper} flex flex-col gap-[18px] px-5 pt-6 pb-7 [color-scheme:light]`}
-      >
-        {entry && <input type="hidden" name="id" value={entry.id} />}
+      <div className="min-w-0 lg:max-w-[760px] lg:flex-[999_1_600px]">
+        <h1 className="mb-5 flex items-center gap-2.5 font-hand text-[44px] leading-[1.05] font-semibold lg:hidden">
+          <Flower kind={kind} size={26} />
+          {title}
+        </h1>
 
-        <fieldset className="flex flex-col gap-1.5">
-          <legend
-            className={`mb-1.5 font-hand text-[22px] leading-tight font-semibold ${look.ink}`}
-          >
-            ¿Qué estás escribiendo?
-          </legend>
-          <div className={`grid grid-cols-2 gap-1 rounded-full p-1 ${look.switchTrack}`}>
-            {ENTRY_KINDS.map((k) => {
-              const active = k === kind;
-              return (
-                <label
-                  key={k}
-                  className={`flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-full text-[18px] has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-wine ${
-                    active ? `${look.switchOn} font-semibold` : look.switchOff
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="kind"
-                    value={k}
-                    checked={active}
-                    onChange={() => setChosenKind(k)}
-                    className="sr-only"
-                  />
-                  <Flower
-                    kind={k}
-                    tone={active ? "light" : "deep"}
-                    center={active ? look.switchOnCenter : look.switchOffCenter}
-                    size={16}
-                  />
-                  {kindLabel(k)}
-                </label>
-              );
-            })}
-          </div>
-          <FieldError id="kind-error" message={errors.kind} />
-        </fieldset>
+        <form
+          ref={form}
+          onSubmit={submit}
+          onInput={saveDraft}
+          noValidate
+          className={`${look.paper} flex flex-col gap-[18px] px-5 pt-6 pb-7 [color-scheme:light] lg:gap-[22px] lg:px-14 lg:pt-10 lg:pb-12 lg:shadow-[0_30px_60px_rgba(0,0,0,0.45)]`}
+        >
+          {entry && <input type="hidden" name="id" value={entry.id} />}
 
-        <div className="flex flex-col gap-1">
-          <label htmlFor="date" className={labelClass}>
-            Fecha
-          </label>
-          <input
-            id="date"
-            name="date"
-            type="date"
-            required
-            max={today}
-            defaultValue={initial.date}
-            aria-invalid={!!errors.date}
-            aria-describedby={errors.date ? "date-error" : undefined}
-            className={`${fieldClass} ${look.inputBg} min-h-11 py-1.5 text-[19px]`}
-          />
-          <FieldError id="date-error" message={errors.date} />
-        </div>
-
-        <div className="flex flex-col gap-1">
-          <label htmlFor="title" className={labelClass}>
-            {look.titleLabel}
-          </label>
-          <input
-            id="title"
-            name="title"
-            type="text"
-            placeholder="Sin título"
-            maxLength={200}
-            defaultValue={initial.title}
-            aria-invalid={!!errors.title}
-            aria-describedby={errors.title ? "title-error" : undefined}
-            className={`${fieldClass} ${look.inputBg} min-h-11 py-1.5 ${
-              kind === "poem" ? "text-[22px] font-semibold" : "text-[20px]"
-            }`}
-          />
-          <FieldError id="title-error" message={errors.title} />
-        </div>
-
-        <div className="flex flex-col gap-1">
-          <label htmlFor="body" className={labelClass}>
-            {kindLabel(kind)}
-          </label>
-          <textarea
-            id="body"
-            name="body"
-            required
-            placeholder={look.placeholder}
-            defaultValue={initial.body}
-            aria-invalid={!!errors.body}
-            aria-describedby={errors.body ? "body-error" : undefined}
-            className={`${fieldClass} field-sizing-content resize-none text-[19px] ${look.body}`}
-          />
-          <FieldError id="body-error" message={errors.body} />
-        </div>
-
-        {result.error && (
-          <p role="alert" className="text-[17px] font-semibold text-wine">
-            {result.error}
-          </p>
-        )}
-
-        <div className="flex flex-wrap items-center gap-2.5">
-          <button type="submit" className={`pill px-6 ${look.save}`} disabled={saving}>
-            {saving
-              ? "Guardando…"
-              : entry
-                ? "Guardar cambios"
-                : kind === "poem"
-                  ? "Guardar poema"
-                  : "Guardar nota"}
-          </button>
-          {entry && cancelHref && (
-            <Link
-              href={cancelHref}
-              onClick={discardDraft}
-              className={`pill ${look.cancel}`}
+          <div className="flex flex-col gap-[18px] lg:flex-row lg:flex-wrap lg:items-center lg:justify-between lg:gap-x-5 lg:gap-y-3">
+            {/* Desktop heading, inside the sheet. Only one of the two h1 is ever displayed. */}
+            <h1
+              className={`hidden items-center gap-2.5 font-hand text-[40px] leading-none font-semibold lg:flex ${look.heading}`}
             >
-              Cancelar
-            </Link>
-          )}
-        </div>
-      </form>
+              <Flower kind={kind} tone="deep" center={look.paperColor} size={24} />
+              {title}
+            </h1>
 
-      <p className="mt-5 text-center text-[15px] text-secondary italic">{look.hint}</p>
-    </>
+            <fieldset className="flex flex-col gap-1.5 lg:w-[300px] lg:max-w-full">
+              <legend
+                className={`mb-1.5 font-hand text-[22px] leading-tight font-semibold lg:sr-only ${look.ink}`}
+              >
+                ¿Qué estás escribiendo?
+              </legend>
+              <div
+                className={`grid grid-cols-2 gap-1 rounded-full p-1 ${look.switchTrack}`}
+              >
+                {ENTRY_KINDS.map((k) => {
+                  const active = k === kind;
+                  return (
+                    <label
+                      key={k}
+                      className={`flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-full text-[18px] has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-wine ${
+                        active ? `${look.switchOn} font-semibold` : look.switchOff
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="kind"
+                        value={k}
+                        checked={active}
+                        onChange={() => setChosenKind(k)}
+                        className="sr-only"
+                      />
+                      <Flower
+                        kind={k}
+                        tone={active ? "light" : "deep"}
+                        center={active ? look.switchOnCenter : look.switchOffCenter}
+                        size={16}
+                      />
+                      {kindLabel(k)}
+                    </label>
+                  );
+                })}
+              </div>
+              <FieldError id="kind-error" message={errors.kind} />
+            </fieldset>
+          </div>
+
+          <div className="flex flex-col gap-[18px] lg:flex-row lg:flex-wrap lg:gap-5">
+            <div className="flex min-w-0 flex-col gap-1 lg:flex-[1_1_200px]">
+              <label htmlFor="date" className={labelClass}>
+                Fecha
+              </label>
+              <input
+                id="date"
+                name="date"
+                type="date"
+                required
+                max={today}
+                defaultValue={initial.date}
+                aria-invalid={!!errors.date}
+                aria-describedby={errors.date ? "date-error" : undefined}
+                className={`${fieldClass} ${look.inputBg} min-h-11 py-1.5 text-[19px] lg:h-[50px]`}
+              />
+              <FieldError id="date-error" message={errors.date} />
+            </div>
+
+            <div className="flex min-w-0 flex-col gap-1 lg:flex-[3_1_300px]">
+              <label htmlFor="title" className={labelClass}>
+                {look.titleLabel}
+              </label>
+              <input
+                id="title"
+                name="title"
+                type="text"
+                placeholder="Sin título"
+                maxLength={200}
+                defaultValue={initial.title}
+                aria-invalid={!!errors.title}
+                aria-describedby={errors.title ? "title-error" : undefined}
+                className={`${fieldClass} ${look.inputBg} min-h-11 py-1.5 lg:h-[50px] ${look.title}`}
+              />
+              <FieldError id="title-error" message={errors.title} />
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <label htmlFor="body" className={labelClass}>
+              {kindLabel(kind)}
+            </label>
+            <textarea
+              id="body"
+              name="body"
+              required
+              placeholder={look.placeholder}
+              defaultValue={initial.body}
+              aria-invalid={!!errors.body}
+              aria-describedby={errors.body ? "body-error" : undefined}
+              className={`${fieldClass} field-sizing-content resize-none text-[19px] ${look.body}`}
+            />
+            <FieldError id="body-error" message={errors.body} />
+          </div>
+
+          {result.error && (
+            <p role="alert" className="text-[17px] font-semibold text-wine">
+              {result.error}
+            </p>
+          )}
+
+          <div className="flex flex-wrap items-center gap-2.5">
+            <button
+              type="submit"
+              className={`pill px-6 lg:min-h-[50px] lg:px-7 lg:text-[19px] ${look.save}`}
+              disabled={saving}
+            >
+              {saving
+                ? "Guardando…"
+                : entry
+                  ? "Guardar cambios"
+                  : kind === "poem"
+                    ? "Guardar poema"
+                    : "Guardar nota"}
+            </button>
+            {entry && cancelHref && (
+              <Link
+                href={cancelHref}
+                onClick={discardDraft}
+                className={`pill lg:min-h-[50px] ${look.cancel}`}
+              >
+                Cancelar
+              </Link>
+            )}
+          </div>
+        </form>
+
+        <p className="mt-5 text-center text-[15px] text-secondary italic lg:hidden">
+          {look.hint}
+        </p>
+      </div>
+    </div>
   );
 }
 

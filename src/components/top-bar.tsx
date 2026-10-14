@@ -11,8 +11,9 @@ export function TopBar({
   backLabel: string;
   children?: ReactNode;
 }) {
+  // Mobile only: on desktop the site header and the side column take its place.
   return (
-    <nav className="mb-8 flex min-h-[48px] items-center justify-between gap-3">
+    <nav className="mb-8 flex min-h-[48px] items-center justify-between gap-3 lg:hidden">
       <Link href={backHref} className="pill shrink-0 px-4">
         <span aria-hidden="true">←</span> {backLabel}
       </Link>

@@ -34,14 +34,6 @@ export async function countByDay(month: string): Promise<Record<string, KindCoun
   return byDay;
 }
 
-export async function countOnDay(date: string): Promise<number> {
-  const [row] = await db()
-    .select({ total: count() })
-    .from(entries)
-    .where(eq(entries.date, date));
-  return row?.total ?? 0;
-}
-
 /** Every entry of a day, poems and notes mixed, in the order they were written. */
 export async function entriesOnDay(date: string): Promise<Entry[]> {
   return db()

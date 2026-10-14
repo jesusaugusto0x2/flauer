@@ -49,18 +49,26 @@ body {
 }
 
 @layer components {
-  /* Notebook paper: one ruled line every 32px. */
+  /* Ruled lines every --rule. Declared on each ruled element so it picks up the
+     --rule in effect there (32px; poems use 38px on desktop). */
+  .paper,
+  .ruled-field {
+    --ruling: repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent calc(var(--rule) - 1px),
+      rgba(70, 80, 130, 0.14) calc(var(--rule) - 1px),
+      rgba(70, 80, 130, 0.14) var(--rule)
+    );
+  }
+
+  /* Notebook paper. */
   .paper {
+    --rule: 32px;
     position: relative;
     border-radius: 4px;
     background-color: var(--color-paper);
-    background-image: repeating-linear-gradient(
-      to bottom,
-      transparent 0,
-      transparent 31px,
-      rgba(70, 80, 130, 0.14) 31px,
-      rgba(70, 80, 130, 0.14) 32px
-    );
+    background-image: var(--ruling);
     box-shadow: var(--shadow-paper);
     color: var(--color-ink);
   }
@@ -81,13 +89,7 @@ body {
   /* A poem's textarea carries its own ruling so the lines scroll with the text. */
   .ruled-field {
     background-color: var(--color-paper);
-    background-image: repeating-linear-gradient(
-      to bottom,
-      transparent 0,
-      transparent 31px,
-      rgba(70, 80, 130, 0.14) 31px,
-      rgba(70, 80, 130, 0.14) 32px
-    );
+    background-image: var(--ruling);
     background-attachment: local;
   }
 

@@ -3,7 +3,7 @@ import { OutlineFlower } from "@/components/icons";
 
 export default function NotFound() {
   return (
-    <main className="pt-16 text-center">
+    <main className="pt-16 text-center lg:mx-auto lg:max-w-[408px]">
       <OutlineFlower className="mx-auto opacity-55 [&_*]:stroke-pink" />
       <p className="eyebrow mt-6">Página perdida</p>
       <h1 className="mt-2 font-hand text-[46px] leading-tight font-semibold">
