@@ -12,7 +12,7 @@ export function ModeSwitch({ mode }: { mode: Mode }) {
       action={setMode}
       role="group"
       aria-label="Modo"
-      className="border-soft-border inline-flex rounded-full border p-[3px]"
+      className="inline-flex rounded-full border border-soft-border p-[3px]"
     >
       {OPTIONS.map(({ value, label }) => {
         const active = mode === value;
@@ -25,7 +25,7 @@ export function ModeSwitch({ mode }: { mode: Mode }) {
             aria-pressed={active}
             className={`min-h-[44px] rounded-full px-4 text-[16px] transition-colors ${
               active
-                ? "bg-light text-night font-semibold"
+                ? "bg-light font-semibold text-night"
                 : "text-secondary hover:text-light"
             }`}
           >
