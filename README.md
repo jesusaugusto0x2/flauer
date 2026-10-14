@@ -1,36 +1,96 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Flauer
 
-## Getting Started
+Un diario personal de poemas. Cada poema pertenece a un día y aparece como una flor en el
+calendario. La lectura es pública; solo la persona dueña del diario puede escribir.
 
-First, run the development server:
+Hecho con Next.js (App Router, Server Components, Server Actions), Neon Postgres, Drizzle
+ORM, Zod, `jose` y Tailwind CSS.
+
+## Rutas
+
+| Ruta                 | Qué hace                                                    |
+| -------------------- | ----------------------------------------------------------- |
+| `/`                  | Calendario del mes actual. `?mes=2026-10` muestra otro mes. |
+| `/dia/AAAA-MM-DD`    | Poemas de ese día.                                          |
+| `/poema/[id]`        | Leer un poema.                                              |
+| `/escribir?fecha=…`  | Nuevo poema (solo con sesión). Sin fecha usa hoy.           |
+| `/poema/[id]/editar` | Editar un poema (solo con sesión).                          |
+| `/entrar`, `/salir`  | Abrir y cerrar sesión. No hay ningún link visible.          |
+
+"Hoy" siempre se calcula en `America/Caracas` (`ZONA_HORARIA` en `src/lib/config.ts`).
+Ahí mismo se configuran el nombre de la app, el subtítulo y la firma opcional de los
+poemas.
+
+## Variables de entorno
+
+| Variable         | Para qué                                                               |
+| ---------------- | ---------------------------------------------------------------------- |
+| `DATABASE_URL`   | Conexión a Neon Postgres. En Vercel la inyecta la integración de Neon. |
+| `OWNER_PASSWORD` | Contraseña de `/entrar`.                                               |
+| `AUTH_SECRET`    | Secreto para firmar la cookie de sesión. Mínimo 32 caracteres.         |
+
+Copia `.env.example` como `.env.local` y complétalo. `.env.local` está en `.gitignore`:
+nunca subas secretos al repo. Para generar `AUTH_SECRET`:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+openssl rand -base64 32
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Correr en local
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Requiere Node 22.12 o superior (ver `.nvmrc`) y pnpm.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+pnpm install
+cp .env.example .env.local   # y completa los valores
+pnpm db:migrate              # crea las tablas
+pnpm db:seed                 # opcional: ~10 poemas de ejemplo
+pnpm dev
+```
 
-## Learn More
+Para desarrollo conviene usar una **rama de Neon** propia en vez de la base de producción
+(en la consola de Neon: _Branches → New branch_) y poner su cadena de conexión en
+`.env.local`.
 
-To learn more about Next.js, take a look at the following resources:
+`pnpm db:seed` es solo para desarrollo: se niega a correr con `NODE_ENV=production`, dentro
+de Vercel o sobre una base que ya tenga poemas.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Otros scripts:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+pnpm lint          # ESLint
+pnpm format        # Prettier
+pnpm build         # build de producción
+pnpm db:studio     # explorar la base con Drizzle Studio
+```
 
-## Deploy on Vercel
+## Migraciones
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+El esquema vive en `src/db/schema.ts` y las migraciones versionadas en `drizzle/`.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+# Después de cambiar el esquema: genera una migración nueva y súbela al repo
+pnpm db:generate --name describe-el-cambio
+
+# Aplica las migraciones pendientes a la base de DATABASE_URL
+pnpm db:migrate
+```
+
+## Desplegar en Vercel
+
+1. Importa el repo en Vercel (framework: Next.js; se detecta pnpm por el lockfile).
+2. En el proyecto: _Storage_ → _Create Database_ → **Neon** (Marketplace) y conéctala al
+   proyecto. Esto inyecta `DATABASE_URL` en los entornos.
+3. En _Settings → Environment Variables_ agrega `OWNER_PASSWORD` y `AUTH_SECRET`.
+4. Aplica las migraciones a la base de producción desde tu máquina:
+
+   ```bash
+   pnpm dlx vercel link
+   pnpm dlx vercel env pull .env.local --environment=production
+   pnpm db:migrate
+   ```
+
+5. Redespliega. Para escribir, entra en `https://tu-dominio/entrar`.
+
+Cada cambio de esquema futuro: `pnpm db:generate`, commit, y `pnpm db:migrate` contra la
+base de producción antes (o justo después) de desplegar.
