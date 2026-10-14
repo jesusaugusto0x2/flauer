@@ -53,7 +53,9 @@ pnpm dev
 ```
 
 For development, use your own **Neon branch** rather than the production database (Neon
-console: _Branches → New branch_) and put its connection string in `.env.local`.
+console: _Branches → New branch_) and copy its connection string into `.env.local`. The Neon
+integration stores `DATABASE_URL` in Vercel as a _sensitive_ variable, so `vercel env pull`
+can't download it: copy it from the Neon console instead.
 
 `pnpm db:seed` is for development only: it refuses to run with `NODE_ENV=production`, on
 Vercel, or against a database that already has entries.
@@ -82,21 +84,20 @@ pnpm db:migrate
 `db:migrate` runs `scripts/migrate.ts`, which uses Neon's HTTP driver (the same one the app
 uses) and prints a clear error when something fails.
 
+On Vercel, `vercel.json` runs `pnpm db:migrate` before every **production** build, so
+pending migrations reach the production database on deploy. If a migration fails, the
+build fails and the previous deployment stays live. Preview builds skip migrations because
+they share the same database.
+
 ## Deploying to Vercel
 
 1. Import the repo in Vercel. `vercel.json` pins the framework to Next.js.
 2. In the project: _Storage → Create Database → Neon_ (Marketplace) and connect it to the
    project. This injects `DATABASE_URL`.
-3. In _Settings → Environment Variables_ add `OWNER_PASSWORD` and `AUTH_SECRET`.
-4. Apply the migrations to the production database from your machine:
+3. In _Settings → Environment Variables_ add `OWNER_PASSWORD` and `AUTH_SECRET` for
+   Production.
+4. Deploy (or redeploy). The production build applies the migrations, then builds the app.
+5. To write, go to `https://your-domain/login`.
 
-   ```bash
-   pnpm dlx vercel link
-   pnpm dlx vercel env pull .env.local --environment=production
-   pnpm db:migrate
-   ```
-
-5. Redeploy. To write, go to `https://your-domain/login`.
-
-For every future schema change: `pnpm db:generate`, commit, and run `pnpm db:migrate`
-against production before (or right after) deploying.
+For every future schema change: `pnpm db:generate`, commit and push. The next production
+deploy migrates the database.

@@ -3,6 +3,9 @@
  *
  *   pnpm db:migrate
  *
+ * Vercel runs it before every production build (see vercel.json), where
+ * DATABASE_URL is available. Preview builds skip it: they share the same database.
+ *
  * Uses Neon's HTTP driver (the same one the app uses) instead of drizzle-kit's
  * WebSocket connection, which can hang without printing an error.
  */
@@ -14,9 +17,18 @@ import { migrate } from "drizzle-orm/neon-http/migrator";
 config({ path: [".env.local", ".env"], quiet: true });
 
 async function main() {
+  if (process.env.VERCEL && process.env.VERCEL_ENV !== "production") {
+    console.log(
+      `Skipping migrations on a ${process.env.VERCEL_ENV ?? "non-production"} build.`,
+    );
+    return;
+  }
+
   const url = process.env.DATABASE_URL;
   if (!url) {
-    console.error("✗ DATABASE_URL is missing. Add it to .env.local (see README).");
+    console.error(
+      "✗ DATABASE_URL is missing. Locally, add it to .env.local; on Vercel, connect the Neon database (see README).",
+    );
     process.exit(1);
   }
 
