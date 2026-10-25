@@ -42,6 +42,30 @@ export function Flower({
   );
 }
 
+/** A play triangle, for videos. Takes the text color. */
+export function PlayIcon({
+  size = 12,
+  className,
+}: {
+  size?: number;
+  className?: string;
+}) {
+  return (
+    <svg
+      viewBox="0 0 12 12"
+      width={size}
+      height={size}
+      aria-hidden="true"
+      className={className}
+    >
+      <path
+        d="M3.5 1.8v8.4c0 .5.5.8.9.5l6.3-4.2a.6.6 0 0 0 0-1L4.4 1.3c-.4-.3-.9 0-.9.5Z"
+        fill="currentColor"
+      />
+    </svg>
+  );
+}
+
 /** Line-drawn flower that decorates the corner of the paper. */
 export function OutlineFlower({
   className,

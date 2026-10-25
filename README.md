@@ -2,7 +2,8 @@
 
 A personal diary of poems, notes and songs. Every entry belongs to a day; on the calendar,
 each day shows one flower per kind it has: pink for poems, gold for notes, lilac for songs.
-Reading is public; only the diary's owner can write.
+Apart from the calendar, `/videos` keeps a list of videos stored on Google Drive or
+YouTube. Reading is public; only the diary's owner can write.
 
 Built with Next.js (App Router, Server Components, Server Actions, Cache Components), Neon
 Postgres, Drizzle ORM, Zod, `jose` and Tailwind CSS. The code is in English; the UI is in
@@ -17,6 +18,9 @@ Spanish.
 | `/entry/[id]`       | Read a poem, a note or a song (one view, styled by kind).                                                          |
 | `/entry/[id]/edit`  | Edit an entry, or change its kind (session required).                                                              |
 | `/write?date=…`     | New entry (session required). Defaults to today and a poem; `&kind=note` or `&kind=song` to start on another kind. |
+| `/videos`           | Every video, the newest first. In write mode, the form to add one.                                                 |
+| `/videos/[id]`      | Watch a video, with its date and note (the list stays at the side on desktop).                                     |
+| `/videos/[id]/edit` | Edit a video (session required).                                                                                   |
 | `/login`, `/logout` | Start and end the session. Nothing links to them.                                                                  |
 
 `/poem/[id]`, the old poem URL, redirects to `/entry/[id]`.
@@ -37,12 +41,31 @@ share parameter are accepted and dropped), `spotify:track:…` app URIs and `spo
 short links from the mobile app. Anything else is rejected. On phones with Spotify
 installed, "Abrir en Spotify" opens the app.
 
+## Videos
+
+Videos aren't uploaded to the diary: they stay on the owner's Google Drive (or on YouTube),
+and the `videos` table keeps where each one is (`source`: `drive` | `youtube`, and
+`external_id`), a title, an optional note, whether it was recorded upright (`vertical`,
+for a 9:16 frame) and `date`: the day it was added, in `America/Caracas`. The server sets
+that date when the video is saved, and editing never changes it.
+
+Links are read in `src/lib/video-links.ts`: Drive files (`/file/d/<id>/view`, `open?id=`,
+`uc?id=`) and YouTube videos (`watch?v=`, `youtu.be`, `/shorts/`, `/embed/`, `/live/`).
+Folders, documents and other sites are rejected. Only the ID is stored, and the page always
+embeds Drive's or YouTube's own player built from it (`drive.google.com/file/d/<id>/preview`,
+`youtube-nocookie.com/embed/<id>`).
+
+For a Drive video to play for visitors, share it as _Anyone with the link_. Safari on
+iPhone can block Drive's player inside other sites (its "Prevent Cross-Site Tracking"
+setting), so every video page also links to the video on Drive or YouTube itself; if a
+video doesn't play on an iPhone, uploading it to YouTube as _Unlisted_ works around it.
+
 ## Scrolling
 
 Text boxes have a fixed height and scroll on their own, so long texts don't stretch the
-page. On desktop, the day next to the calendar and the side lists while reading or
-writing fit in the window and scroll inside; the reading sheet does too. On phones the
-page scrolls as usual.
+page. On desktop, the day next to the calendar, the side lists while reading or writing,
+and the list of videos fit in the window and scroll inside; the reading sheet does too. On
+phones the page scrolls as usual.
 
 "Today" is always computed in `America/Caracas` (`TIME_ZONE` in `src/lib/config.ts`). The
 app name, subtitle and optional poem signature live in the same file.
@@ -70,7 +93,7 @@ Requires Node 22.12+ (see `.nvmrc`) and pnpm.
 pnpm install
 cp .env.example .env.local   # then fill in the values
 pnpm db:migrate              # creates the tables
-pnpm db:seed                 # optional: sample poems, notes and songs
+pnpm db:seed                 # optional: sample poems, notes, songs and videos
 pnpm dev
 ```
 

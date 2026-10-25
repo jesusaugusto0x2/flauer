@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { Calendar } from "@/components/calendar";
 import { DayPanel } from "@/components/day-panel";
 import { DesktopHeader } from "@/components/desktop-header";
+import { PlayIcon } from "@/components/icons";
 import { Loading } from "@/components/loading";
 import { ModeSwitch } from "@/components/mode-switch";
 import { APP_NAME, APP_SUBTITLE } from "@/lib/config";
@@ -87,7 +88,7 @@ async function CalendarHome({ searchParams }: Pick<PageProps<"/">, "searchParams
         )}
       </div>
 
-      <div className="mt-10 flex justify-center lg:hidden">
+      <div className="mt-10 flex flex-wrap justify-center gap-3 lg:hidden">
         {mode === "write" ? (
           <Link href="/write" className="pill pill-wine px-6">
             + Escribir hoy
@@ -99,6 +100,9 @@ async function CalendarHome({ searchParams }: Pick<PageProps<"/">, "searchParams
             </Link>
           )
         )}
+        <Link href="/videos" className="pill px-6">
+          <PlayIcon size={11} /> Videos
+        </Link>
       </div>
     </>
   );

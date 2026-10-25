@@ -1,5 +1,5 @@
 /**
- * Fills the database with sample poems, notes and songs. LOCAL DEVELOPMENT ONLY.
+ * Fills the database with sample poems, notes, songs and videos. LOCAL DEVELOPMENT ONLY.
  *
  *   pnpm db:seed
  *
@@ -9,7 +9,7 @@ import { neon } from "@neondatabase/serverless";
 import { config } from "dotenv";
 import { count } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/neon-http";
-import { entries, type EntryKind } from "../src/db/schema";
+import { entries, videos, type EntryKind, type VideoSource } from "../src/db/schema";
 import { today } from "../src/lib/dates";
 
 config({ path: [".env.local", ".env"], quiet: true });
@@ -142,6 +142,33 @@ const samples: {
   },
 ];
 
+// Video IDs are made up too: the list shows them, but they won't play.
+const sampleVideos: {
+  daysAgo: number;
+  source: VideoSource;
+  externalId: string;
+  title: string;
+  note: string | null;
+  vertical: boolean;
+}[] = [
+  {
+    daysAgo: 3,
+    source: "youtube",
+    externalId: "SampleVid01",
+    title: "Un paseo por el Ávila",
+    note: null,
+    vertical: false,
+  },
+  {
+    daysAgo: 0,
+    source: "drive",
+    externalId: "1SampleDriveVideoId00000000000000",
+    title: "Las flores del balcón",
+    note: "Las grabé al atardecer, antes de que se cerraran.",
+    vertical: true,
+  },
+];
+
 async function main() {
   const db = drizzle(neon(process.env.DATABASE_URL!));
 
@@ -161,7 +188,13 @@ async function main() {
       spotifyUrl: s.spotifyUrl ?? null,
     });
   }
-  console.log(`✓ Created ${samples.length} sample entries.`);
+  // Oldest first, so the newest is the newest in the list too.
+  for (const { daysAgo: n, ...video } of sampleVideos) {
+    await db.insert(videos).values({ ...video, date: daysAgo(n) });
+  }
+  console.log(
+    `✓ Created ${samples.length} sample entries and ${sampleVideos.length} videos.`,
+  );
 }
 
 main().catch((error) => {

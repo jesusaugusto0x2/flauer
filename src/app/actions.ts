@@ -5,7 +5,15 @@ import { redirect } from "next/navigation";
 import { clearAttempts, isCorrectPassword, recordAttempt } from "@/lib/login-guard";
 import { createEntry, deleteEntry, isValidId, updateEntry } from "@/lib/entries";
 import { createSession, hasSession, saveMode } from "@/lib/session";
-import { entrySchema, type EntryField, type EntryFormState } from "@/lib/validation";
+import {
+  entrySchema,
+  videoSchema,
+  type EntryField,
+  type EntryFormState,
+  type VideoField,
+  type VideoFormState,
+} from "@/lib/validation";
+import { createVideo, deleteVideo, updateVideo } from "@/lib/videos";
 
 // Messages returned to the UI are in Spanish.
 const NO_SESSION = "Tu sesión expiró. Vuelve a entrar para guardar.";
@@ -91,6 +99,67 @@ export async function removeEntry(id: string): Promise<{ error?: string }> {
     return { error: "No se pudo borrar. Inténtalo de nuevo." };
   }
 
+  refresh();
+  return {};
+}
+
+// ── Videos ──────────────────────────────────────────────────────────────────
+
+/** A new video stays on the list page (saved); an edited one goes back to it. */
+export type SaveVideoResult = VideoFormState & { saved?: boolean; redirectTo?: string };
+
+export async function saveVideo(formData: FormData): Promise<SaveVideoResult> {
+  if (!(await hasSession())) return { error: NO_SESSION };
+
+  const parsed = videoSchema.safeParse({
+    link: String(formData.get("link") ?? ""),
+    title: String(formData.get("title") ?? ""),
+    note: String(formData.get("note") ?? ""),
+    vertical: formData.get("vertical") === "on",
+  });
+  if (!parsed.success) {
+    const fieldErrors: Partial<Record<VideoField, string>> = {};
+    for (const issue of parsed.error.issues) {
+      const field = issue.path[0] as VideoField;
+      fieldErrors[field] ??= issue.message;
+    }
+    return { fieldErrors };
+  }
+
+  const id = formData.get("id");
+  try {
+    if (typeof id === "string" && id) {
+      if (!isValidId(id) || !(await updateVideo(id, parsed.data))) {
+        return { error: "Ese video ya no existe." };
+      }
+      return { redirectTo: `/videos/${id}` };
+    }
+    await createVideo(parsed.data);
+  } catch (e) {
+    console.error(e);
+    return { error: "No se pudo guardar. Inténtalo de nuevo." };
+  }
+
+  refresh();
+  return { saved: true };
+}
+
+/** `leave`: the deleted video was on screen, so go back to the list. */
+export async function removeVideo(
+  id: string,
+  leave = false,
+): Promise<{ error?: string }> {
+  if (!(await hasSession())) return { error: NO_SESSION };
+  if (!isValidId(id)) return { error: "Ese video ya no existe." };
+
+  try {
+    await deleteVideo(id);
+  } catch (e) {
+    console.error(e);
+    return { error: "No se pudo borrar. Inténtalo de nuevo." };
+  }
+
+  if (leave === true) redirect("/videos");
   refresh();
   return {};
 }

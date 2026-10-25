@@ -5,15 +5,8 @@ import { countLabel, emptyCounts, ENTRY_KINDS } from "@/lib/kinds";
 import type { Mode } from "@/lib/session";
 import { EntryCard, KIND_THEME, type EntrySummary } from "./entry-cards";
 import { Flower } from "./icons";
-import { SIDE_COLUMN } from "./side-column";
+import { SIDE_COLUMN, SIDE_COLUMN_LIST } from "./side-column";
 import { WriteList } from "./write-list";
-
-/**
- * Desktop: the card list scrolls inside a column as tall as the window (minus a
- * margin), which stays in view while the page scrolls. Phones: the page scrolls.
- */
-const LIST_SCROLL =
-  "lg:-mx-3 lg:min-h-0 lg:flex-1 lg:scroll-area lg:px-3 lg:pt-1 lg:pb-6";
 
 /**
  * A day's poems, notes and songs. On phones it is the whole day page; on desktop
@@ -84,7 +77,7 @@ export function DayPanel({
       </header>
 
       {mode === "write" ? (
-        <WriteList date={date} entries={summaries} listClassName={LIST_SCROLL} />
+        <WriteList date={date} entries={summaries} listClassName={SIDE_COLUMN_LIST} />
       ) : entries.length === 0 ? (
         <div className="mt-12 text-center lg:mt-8 lg:text-left">
           <p className="text-[19px] text-secondary italic">
@@ -100,7 +93,7 @@ export function DayPanel({
         </div>
       ) : (
         <ul
-          className={`mt-6 flex flex-col gap-3.5 lg:mt-[18px] lg:gap-[18px] ${LIST_SCROLL}`}
+          className={`mt-6 flex flex-col gap-3.5 lg:mt-[18px] lg:gap-[18px] ${SIDE_COLUMN_LIST}`}
         >
           {summaries.map((e) => (
             <li key={e.id}>

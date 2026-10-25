@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { isValidDate, today } from "./dates";
 import { normalizeSpotifyUrl } from "./spotify";
+import { parseVideoLink } from "./video-links";
 
 const MAX_BODY = 20000;
 /** "Por qué te identifica" is a short reason, so songs keep it brief. */
@@ -72,5 +73,54 @@ export type EntryField = "kind" | "date" | "title" | "body" | "artist" | "spotif
 
 export type EntryFormState = {
   fieldErrors?: Partial<Record<EntryField, string>>;
+  error?: string;
+};
+
+/** A video's note is a line or two about it. */
+const MAX_VIDEO_NOTE = 1000;
+
+// The date isn't here: a video always gets the day it was added, on the server.
+export const videoSchema = z
+  .object({
+    link: z
+      .string()
+      .trim()
+      .min(1, "Pega el enlace del video.")
+      .transform((link, ctx) => {
+        const video = parseVideoLink(link);
+        if (!video) {
+          ctx.addIssue({
+            code: "custom",
+            message:
+              "Ese enlace no es de un video de Drive ni de YouTube. En Drive, abre el video y toca Compartir → Copiar enlace.",
+          });
+          return z.NEVER;
+        }
+        return video;
+      }),
+    title: z
+      .string()
+      .trim()
+      .min(1, "Ponle un título al video.")
+      .max(200, "El título es demasiado largo (máx. 200 caracteres)."),
+    note: z
+      .string()
+      .transform((t) => t.replace(/\r\n/g, "\n").replace(/^\n+|\s+$/g, ""))
+      .refine(
+        (t) => t.length <= MAX_VIDEO_NOTE,
+        `La nota es demasiado larga (máx. ${MAX_VIDEO_NOTE} caracteres).`,
+      )
+      .transform((t) => t || null),
+    vertical: z.boolean(),
+  })
+  // Only where the video is gets stored, never the link as pasted.
+  .transform(({ link, ...video }) => ({ ...link, ...video }));
+
+export type VideoInput = z.output<typeof videoSchema>;
+
+export type VideoField = "link" | "title" | "note";
+
+export type VideoFormState = {
+  fieldErrors?: Partial<Record<VideoField, string>>;
   error?: string;
 };

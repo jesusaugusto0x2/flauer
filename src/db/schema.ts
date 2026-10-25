@@ -1,4 +1,5 @@
 import {
+  boolean,
   date,
   index,
   integer,
@@ -31,6 +32,29 @@ export const entries = pgTable(
   (t) => [index("entries_date_idx").on(t.date, t.createdAt)],
 );
 
+export const videoSource = pgEnum("video_source", ["drive", "youtube"]);
+
+// A video kept on Google Drive or YouTube: the diary stores where it is, not the
+// file. Videos have their own list at /videos, apart from the calendar.
+export const videos = pgTable(
+  "videos",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    source: videoSource("source").notNull(),
+    // The file's ID on Drive, or the video's ID on YouTube.
+    externalId: text("external_id").notNull(),
+    title: text("title").notNull(),
+    note: text("note"),
+    // Recorded upright on a phone (9:16) rather than sideways (16:9).
+    vertical: boolean("vertical").notNull().default(false),
+    // The day it was added (YYYY-MM-DD, America/Caracas). It never changes.
+    date: date("date", { mode: "string" }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("videos_created_idx").on(t.createdAt)],
+);
+
 // Attempts against /login, used to rate-limit it.
 export const loginAttempts = pgTable("login_attempts", {
   key: text("key").primaryKey(),
@@ -40,3 +64,6 @@ export const loginAttempts = pgTable("login_attempts", {
 
 export type Entry = typeof entries.$inferSelect;
 export type EntryKind = Entry["kind"];
+
+export type Video = typeof videos.$inferSelect;
+export type VideoSource = Video["source"];
