@@ -8,7 +8,14 @@ import type { VideoField } from "@/lib/validation";
 
 type Props = {
   /** When editing: the saved video, with its link rebuilt from where it is. */
-  video?: { id: string; link: string; title: string; note: string; vertical: boolean };
+  video?: {
+    id: string;
+    link: string;
+    title: string;
+    note: string;
+    duration: string;
+    vertical: boolean;
+  };
   /** Says which date the video gets (today's, or the one it already has). */
   dateNote: string;
   cancelHref?: string;
@@ -19,7 +26,7 @@ type Props = {
 const FIELD =
   "block w-full rounded-[8px] border border-soft-border bg-night/70 px-3.5 text-[18px] text-light placeholder:text-muted aria-[invalid=true]:border-pink";
 
-/** Link, title, an optional note and whether it was recorded upright. */
+/** Link, title, an optional note and length, and whether it was recorded upright. */
 export function VideoForm({ video, dateNote, cancelHref, onSaved }: Props) {
   const router = useRouter();
   const form = useRef<HTMLFormElement>(null);
@@ -111,6 +118,30 @@ export function VideoForm({ video, dateNote, cancelHref, onSaved }: Props) {
           className={`${FIELD} h-24 resize-none scroll-area py-2.5 leading-snug`}
         />
         <FieldError id={id("note-error")} message={errors.note} />
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor={id("duration")} className="text-[17px] text-secondary">
+          Duración (opcional)
+        </label>
+        <input
+          id={id("duration")}
+          name="duration"
+          type="text"
+          autoComplete="off"
+          placeholder="1:23"
+          defaultValue={video?.duration}
+          aria-invalid={!!errors.duration}
+          aria-describedby={describedBy("duration", id("duration-hint"))}
+          className={`${FIELD} min-h-12 w-32`}
+        />
+        <FieldError id={id("duration-error")} message={errors.duration} />
+        <p
+          id={id("duration-hint")}
+          className="text-[15px] leading-snug text-secondary italic"
+        >
+          Minutos y segundos. Sale en la esquina de la miniatura.
+        </p>
       </div>
 
       <label className="flex min-h-11 items-center gap-3 text-[17px]">

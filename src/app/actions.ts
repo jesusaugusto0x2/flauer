@@ -115,6 +115,7 @@ export async function saveVideo(formData: FormData): Promise<SaveVideoResult> {
     link: String(formData.get("link") ?? ""),
     title: String(formData.get("title") ?? ""),
     note: String(formData.get("note") ?? ""),
+    duration: String(formData.get("duration") ?? ""),
     vertical: formData.get("vertical") === "on",
   });
   if (!parsed.success) {
@@ -144,11 +145,8 @@ export async function saveVideo(formData: FormData): Promise<SaveVideoResult> {
   return { saved: true };
 }
 
-/** `leave`: the deleted video was on screen, so go back to the list. */
-export async function removeVideo(
-  id: string,
-  leave = false,
-): Promise<{ error?: string }> {
+/** Deleted from its own page, so it goes back to the list. */
+export async function removeVideo(id: string): Promise<{ error?: string }> {
   if (!(await hasSession())) return { error: NO_SESSION };
   if (!isValidId(id)) return { error: "Ese video ya no existe." };
 
@@ -159,7 +157,5 @@ export async function removeVideo(
     return { error: "No se pudo borrar. Inténtalo de nuevo." };
   }
 
-  if (leave === true) redirect("/videos");
-  refresh();
-  return {};
+  redirect("/videos");
 }

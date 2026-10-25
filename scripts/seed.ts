@@ -149,6 +149,7 @@ const sampleVideos: {
   externalId: string;
   title: string;
   note: string | null;
+  durationSeconds: number | null;
   vertical: boolean;
 }[] = [
   {
@@ -157,6 +158,7 @@ const sampleVideos: {
     externalId: "SampleVid01",
     title: "Un paseo por el Ávila",
     note: null,
+    durationSeconds: 154,
     vertical: false,
   },
   {
@@ -165,6 +167,7 @@ const sampleVideos: {
     externalId: "1SampleDriveVideoId00000000000000",
     title: "Las flores del balcón",
     note: "Las grabé al atardecer, antes de que se cerraran.",
+    durationSeconds: null,
     vertical: true,
   },
 ];

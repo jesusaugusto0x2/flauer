@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { isValidDate, today } from "./dates";
+import { parseDuration } from "./duration";
 import { normalizeSpotifyUrl } from "./spotify";
 import { parseVideoLink } from "./video-links";
 
@@ -111,14 +112,34 @@ export const videoSchema = z
         `La nota es demasiado larga (máx. ${MAX_VIDEO_NOTE} caracteres).`,
       )
       .transform((t) => t || null),
+    // Optional: 1:23 or 1:02:03, kept in seconds.
+    duration: z
+      .string()
+      .trim()
+      .transform((text, ctx) => {
+        if (!text) return null;
+        const seconds = parseDuration(text);
+        if (seconds === null) {
+          ctx.addIssue({
+            code: "custom",
+            message: "Escribe la duración como 1:23 (minutos y segundos).",
+          });
+          return z.NEVER;
+        }
+        return seconds;
+      }),
     vertical: z.boolean(),
   })
   // Only where the video is gets stored, never the link as pasted.
-  .transform(({ link, ...video }) => ({ ...link, ...video }));
+  .transform(({ link, duration, ...video }) => ({
+    ...link,
+    ...video,
+    durationSeconds: duration,
+  }));
 
 export type VideoInput = z.output<typeof videoSchema>;
 
-export type VideoField = "link" | "title" | "note";
+export type VideoField = "link" | "title" | "note" | "duration";
 
 export type VideoFormState = {
   fieldErrors?: Partial<Record<VideoField, string>>;

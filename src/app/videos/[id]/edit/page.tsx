@@ -8,6 +8,7 @@ import { ModeSwitch } from "@/components/mode-switch";
 import { TopBar } from "@/components/top-bar";
 import { VideoForm } from "@/components/video-form";
 import { mediumDate } from "@/lib/dates";
+import { formatDuration } from "@/lib/duration";
 import { currentMode } from "@/lib/session";
 import { openUrl } from "@/lib/video-links";
 import { getVideo } from "@/lib/videos";
@@ -52,6 +53,9 @@ async function EditVideo({ params }: Pick<PageProps<"/videos/[id]/edit">, "param
               link: openUrl(video),
               title: video.title,
               note: video.note ?? "",
+              duration: video.durationSeconds
+                ? formatDuration(video.durationSeconds)
+                : "",
               vertical: video.vertical,
             }}
             dateNote={`Agregado el ${mediumDate(video.date)}. Esa fecha no cambia.`}

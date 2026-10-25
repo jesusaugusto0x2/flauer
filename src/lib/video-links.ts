@@ -97,6 +97,16 @@ export function embedUrl({ source, externalId }: VideoRef) {
 }
 
 /**
+ * A still of the video. Drive's address isn't documented and only works for files
+ * shared publicly, so the page keeps a picture of its own for when it fails.
+ */
+export function thumbnailUrl({ source, externalId }: VideoRef) {
+  return source === "drive"
+    ? `https://drive.google.com/thumbnail?id=${externalId}&sz=w640`
+    : `https://i.ytimg.com/vi/${externalId}/hqdefault.jpg`;
+}
+
+/**
  * The video on Drive or YouTube itself: for when the embedded player won't load,
  * and to fill the edit form (only the ID is stored).
  */

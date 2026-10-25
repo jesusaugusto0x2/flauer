@@ -18,8 +18,8 @@ Spanish.
 | `/entry/[id]`       | Read a poem, a note or a song (one view, styled by kind).                                                          |
 | `/entry/[id]/edit`  | Edit an entry, or change its kind (session required).                                                              |
 | `/write?date=…`     | New entry (session required). Defaults to today and a poem; `&kind=note` or `&kind=song` to start on another kind. |
-| `/videos`           | Every video, the newest first. In write mode, the form to add one.                                                 |
-| `/videos/[id]`      | Watch a video, with its date and note (the list stays at the side on desktop).                                     |
+| `/videos`           | Every video as a grid of squares by month, the newest first. In write mode, the form to add one.                   |
+| `/videos/[id]`      | Watch a video, with its date, note and the videos before and after it.                                             |
 | `/videos/[id]/edit` | Edit a video (session required).                                                                                   |
 | `/login`, `/logout` | Start and end the session. Nothing links to them.                                                                  |
 
@@ -45,15 +45,22 @@ installed, "Abrir en Spotify" opens the app.
 
 Videos aren't uploaded to the diary: they stay on the owner's Google Drive (or on YouTube),
 and the `videos` table keeps where each one is (`source`: `drive` | `youtube`, and
-`external_id`), a title, an optional note, whether it was recorded upright (`vertical`,
-for a 9:16 frame) and `date`: the day it was added, in `America/Caracas`. The server sets
-that date when the video is saved, and editing never changes it.
+`external_id`), a title, an optional note, an optional length (`duration_seconds`, typed
+as 1:23 because Drive and YouTube don't tell it to the page), whether it was recorded
+upright (`vertical`, for a 9:16 frame) and `date`: the day it was added, in
+`America/Caracas`. The server sets that date when the video is saved, and editing never
+changes it.
 
 Links are read in `src/lib/video-links.ts`: Drive files (`/file/d/<id>/view`, `open?id=`,
 `uc?id=`) and YouTube videos (`watch?v=`, `youtu.be`, `/shorts/`, `/embed/`, `/live/`).
 Folders, documents and other sites are rejected. Only the ID is stored, and the page always
 embeds Drive's or YouTube's own player built from it (`drive.google.com/file/d/<id>/preview`,
 `youtube-nocookie.com/embed/<id>`).
+
+Each square in the list shows the video's own still: YouTube's (`i.ytimg.com`) or Drive's
+(`drive.google.com/thumbnail`, undocumented, and only for files shared publicly). When it
+doesn't load, the diary draws its own: a dark square with the flower, the day written by
+hand and a play button.
 
 For a Drive video to play for visitors, share it as _Anyone with the link_. Safari on
 iPhone can block Drive's player inside other sites (its "Prevent Cross-Site Tracking"
@@ -63,9 +70,9 @@ video doesn't play on an iPhone, uploading it to YouTube as _Unlisted_ works aro
 ## Scrolling
 
 Text boxes have a fixed height and scroll on their own, so long texts don't stretch the
-page. On desktop, the day next to the calendar, the side lists while reading or writing,
-and the list of videos fit in the window and scroll inside; the reading sheet does too. On
-phones the page scrolls as usual.
+page. On desktop, the day next to the calendar and the side lists while reading or
+writing fit in the window and scroll inside; the reading sheet does too. On phones the
+page scrolls as usual.
 
 "Today" is always computed in `America/Caracas` (`TIME_ZONE` in `src/lib/config.ts`). The
 app name, subtitle and optional poem signature live in the same file.

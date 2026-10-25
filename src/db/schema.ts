@@ -47,6 +47,8 @@ export const videos = pgTable(
     note: text("note"),
     // Recorded upright on a phone (9:16) rather than sideways (16:9).
     vertical: boolean("vertical").notNull().default(false),
+    // Typed in by hand, if at all: Drive and YouTube don't tell it to the page.
+    durationSeconds: integer("duration_seconds"),
     // The day it was added (YYYY-MM-DD, America/Caracas). It never changes.
     date: date("date", { mode: "string" }).notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

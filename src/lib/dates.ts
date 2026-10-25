@@ -79,6 +79,36 @@ export function weekday(date: string) {
   return format(date, { weekday: "long" });
 }
 
+/** The pieces of a date (weekday, day, month), to join without Intl's commas. */
+function dateParts(date: string, options: Intl.DateTimeFormatOptions) {
+  const parts: Partial<Record<Intl.DateTimeFormatPartTypes, string>> = {};
+  for (const { type, value } of new Intl.DateTimeFormat(LOCALE, {
+    timeZone: "UTC",
+    ...options,
+  }).formatToParts(toUTC(date))) {
+    parts[type] = value;
+  }
+  return parts;
+}
+
+/** "14 oct" */
+export function tinyDate(date: string) {
+  const { day, month } = dateParts(date, { day: "numeric", month: "short" });
+  return `${day} ${month}`;
+}
+
+/** "Mié 14 oct" */
+export function compactWeekdayDate(date: string) {
+  const p = dateParts(date, { weekday: "short", day: "numeric", month: "short" });
+  return `${capitalize(p.weekday ?? "")} ${p.day} ${p.month}`;
+}
+
+/** "Miércoles 14 de octubre" */
+export function weekdayDate(date: string) {
+  const p = dateParts(date, { weekday: "long", day: "numeric", month: "long" });
+  return `${capitalize(p.weekday ?? "")} ${p.day} de ${p.month}`;
+}
+
 /** "octubre" */
 export function monthName(month: string) {
   return format(`${month}-01`, { month: "long" });

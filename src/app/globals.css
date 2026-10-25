@@ -31,6 +31,10 @@
   --color-song-ink-soft: #4a4566;
   --color-song-accent: #4b3f8f;
 
+  /* Videos: a lighter night for frames and thumbnails, and softer text. */
+  --color-night-soft: #221f3d;
+  --color-light-soft: #d9d1e0;
+
   --font-body: var(--font-cormorant), "Cormorant Garamond", Georgia, serif;
   --font-hand: var(--font-caveat), "Caveat", cursive;
 

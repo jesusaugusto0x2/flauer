@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { DesktopHeader } from "@/components/desktop-header";
 import { Loading } from "@/components/loading";
 import { ModeSwitch } from "@/components/mode-switch";
-import { TopBar } from "@/components/top-bar";
-import { PlayerPlaceholder } from "@/components/video-player";
-import { VideosColumn } from "@/components/videos-column";
+import { AddVideo } from "@/components/video-form";
+import { VideoGrid } from "@/components/video-grid";
 import { APP_NAME } from "@/lib/config";
-import { today } from "@/lib/dates";
+import { mediumDate, plural, today } from "@/lib/dates";
 import { currentMode } from "@/lib/session";
 import { listVideos } from "@/lib/videos";
 
@@ -25,36 +25,58 @@ export default function VideosPage() {
 async function Videos() {
   await connection();
   const [{ session, mode }, videos] = await Promise.all([currentMode(), listVideos()]);
+  const writing = mode === "write";
 
   return (
     <main>
       <DesktopHeader session={session} mode={mode} section="videos" />
-      <TopBar backHref="/" backLabel="Calendario">
-        {session ? (
+      {/* Phone header: the diary's name and the way back to the calendar. */}
+      <header className="flex items-center justify-between gap-3 border-b border-light/18 pb-3.5 lg:hidden">
+        <div>
+          <p className="eyebrow text-[11px]">Diario de poemas</p>
+          <p className="font-hand text-[42px] leading-none font-semibold">{APP_NAME}</p>
+        </div>
+        <Link href="/" className="pill shrink-0 px-4">
+          Calendario
+        </Link>
+      </header>
+      {session && (
+        <div className="mt-5 flex justify-center lg:hidden">
           <ModeSwitch mode={mode} />
-        ) : (
-          <span className="font-hand text-[28px] leading-none font-semibold">
-            {APP_NAME}
+        </div>
+      )}
+
+      <div className="mt-[22px] flex items-baseline justify-between gap-3 lg:mt-0">
+        <h1 className="font-hand text-[50px] leading-none font-semibold lg:text-[64px]">
+          Videos
+        </h1>
+        {videos.length > 0 && (
+          <span className="text-[17px] text-secondary italic lg:text-[19px]">
+            {plural(videos.length, "video", "videos")}
           </span>
         )}
-      </TopBar>
-
-      <div className="lg:flex lg:items-start lg:gap-10">
-        <VideosColumn
-          videos={videos}
-          mode={mode}
-          todayDate={today()}
-          className="min-w-0 lg:max-w-[460px] lg:flex-[1_1_380px]"
-        />
-        {/* Desktop: the chosen video plays here, next to the list. */}
-        <div className="hidden min-w-0 lg:sticky lg:top-6 lg:block lg:flex-[2_1_600px]">
-          <PlayerPlaceholder>
-            {videos.length > 0
-              ? "Elige un video para verlo aquí."
-              : "Aquí se verá el video que elijas."}
-          </PlayerPlaceholder>
-        </div>
       </div>
+
+      {writing && (
+        <div className="mt-6 lg:mt-8 lg:max-w-[640px]">
+          <AddVideo
+            dateNote={`Se guarda con la fecha de hoy: ${mediumDate(today())}.`}
+            startOpen={videos.length === 0}
+          />
+        </div>
+      )}
+
+      {videos.length > 0 ? (
+        <div className="mt-[22px] lg:mt-8">
+          <VideoGrid videos={videos} />
+        </div>
+      ) : (
+        <p className="mt-8 text-[19px] text-secondary italic">
+          {writing
+            ? "Todavía no hay videos. Agrega el primero."
+            : "Todavía no hay videos."}
+        </p>
+      )}
     </main>
   );
 }
