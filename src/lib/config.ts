@@ -5,9 +5,13 @@ export const TIME_ZONE = "America/Caracas";
 
 export const LOCALE = "es";
 
-export const APP_NAME = "Para Flor";
-export const APP_SUBTITLE = "Un poema cada día, aunque nunca llegue a leerlos.";
-export const APP_DESCRIPTION = "Un diario de poemas, notas y canciones, uno por flor.";
+export const APP_NAME = "Volver a florecer";
+/** The small line above the name. */
+export const APP_EYEBROW = "Bitácora de sentimientos";
+export const APP_SUBTITLE =
+  "Poemas, notas y canciones para sanar una ruptura, un día a la vez.";
+/** For search results and link previews. */
+export const APP_DESCRIPTION = APP_SUBTITLE;
 
 /** Signature shown under each poem. Empty = no signature. */
 export const SIGNATURE = "";

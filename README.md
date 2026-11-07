@@ -1,10 +1,11 @@
 # Flauer
 
-A personal diary of poems, notes and songs. Every entry belongs to a day; on the calendar,
-each day shows one flower per kind it has: pink for poems, gold for notes, lilac for songs.
-Apart from the calendar, `/videos` keeps a list of videos stored on Google Drive or
-YouTube. The calendar, the days and the songs are open to everyone; poems, notes and
-videos open with the reader's password or a share link; only the diary's owner can write.
+A personal diary of poems, notes and songs, titled _Volver a florecer_ on its pages. Every
+entry belongs to a day; on the calendar, each day shows one flower per kind it has: pink
+for poems, gold for notes, lilac for songs. Apart from the calendar, `/videos` keeps a list
+of videos stored on Google Drive or YouTube. The calendar, the days and the songs are open
+to everyone; poems, notes and videos open with the reader's password or a share link; only
+the diary's owner can write.
 
 Built with Next.js (App Router, Server Components, Server Actions, Cache Components), Neon
 Postgres, Drizzle ORM, Zod, `jose` and Tailwind CSS. The code is in English; the UI is in
@@ -96,6 +97,19 @@ link takes the reader to the item's page with `?c=<code>`, and the page checks t
 code is the one for that item; lookups count toward a limit per address, so codes can't
 be found by trying them.
 
+**Share alerts.** When a share link opens its item for anyone but the logged-in owner, the
+owner gets an email (to `SHARE_ALERT_EMAIL`, sent through [Resend](https://resend.com)): what
+was opened, when, roughly where (Vercel's guess from the address) and on what device, with
+the link to stop sharing. Reloads and views by the same visitor within 30 minutes are one
+visit and send one email; link previews (WhatsApp, iMessage, Telegram…), search engines and
+scripts send none; and there are at most 30 a day. The email goes out after the page is
+sent (`after()`), so it never slows the page down, and a failure only logs. The
+`share_views` table records the views, with a keyed hash of the visitor's address and
+browser instead of the address. Emails come from `avisos@` the domain in
+`RESEND_EMAIL_DOMAIN`; if Resend refuses it (a domain not verified yet), they come from
+`onboarding@resend.dev`, which only delivers to the Resend account's own email. Without
+`RESEND_API_KEY` or `SHARE_ALERT_EMAIL`, nothing is sent.
+
 The password protects the diary's pages, not the files on Drive: a Drive video has to be
 shared as _Anyone with the link_ for its player to work, so whoever gets that address can
 watch it.
@@ -108,16 +122,20 @@ writing fit in the window and scroll inside; the reading sheet does too. On phon
 page scrolls as usual.
 
 "Today" is always computed in `America/Caracas` (`TIME_ZONE` in `src/lib/config.ts`). The
-app name, subtitle and optional poem signature live in the same file.
+app name, the line above it, the subtitle and the optional poem signature live in the same
+file.
 
 ## Environment variables
 
-| Variable          | Purpose                                                                                                        |
-| ----------------- | -------------------------------------------------------------------------------------------------------------- |
-| `DATABASE_URL`    | Neon Postgres connection string. On Vercel the Neon integration sets it.                                       |
-| `OWNER_PASSWORD`  | Password for `/login`. You choose it.                                                                          |
-| `READER_PASSWORD` | Password that opens poems, notes and videos to read. Without it, they only open for the owner and share links. |
-| `AUTH_SECRET`     | Random secret that signs the session cookie. At least 32 characters.                                           |
+| Variable              | Purpose                                                                                                        |
+| --------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `DATABASE_URL`        | Neon Postgres connection string. On Vercel the Neon integration sets it.                                       |
+| `OWNER_PASSWORD`      | Password for `/login`. You choose it.                                                                          |
+| `READER_PASSWORD`     | Password that opens poems, notes and videos to read. Without it, they only open for the owner and share links. |
+| `AUTH_SECRET`         | Random secret that signs the session cookie. At least 32 characters.                                           |
+| `RESEND_API_KEY`      | Optional. Resend's key, for share alerts. The Resend integration on Vercel sets it.                            |
+| `RESEND_EMAIL_DOMAIN` | Optional. The domain the alerts come from (`avisos@…`). The Resend integration sets it.                        |
+| `SHARE_ALERT_EMAIL`   | Optional. Where share alerts go. Without it (or the key), none are sent.                                       |
 
 Copy `.env.example` to `.env.local` and fill it in. `.env.local` is git-ignored: never
 commit secrets. To generate `AUTH_SECRET`:
@@ -182,8 +200,11 @@ they share the same database.
    project. This injects `DATABASE_URL`.
 3. In _Settings → Environment Variables_ add `OWNER_PASSWORD`, `READER_PASSWORD` and
    `AUTH_SECRET` for Production.
-4. Deploy (or redeploy). The production build applies the migrations, then builds the app.
-5. To write, go to `https://your-domain/login`.
+4. Optional, for share alerts: install Resend from the Vercel Marketplace and connect it to
+   the project and the domain (it adds `RESEND_API_KEY` and `RESEND_EMAIL_DOMAIN` and the
+   domain's DNS records), then add `SHARE_ALERT_EMAIL` for Production.
+5. Deploy (or redeploy). The production build applies the migrations, then builds the app.
+6. To write, go to `https://your-domain/login`.
 
 For every future schema change: `pnpm db:generate`, commit and push. The next production
 deploy migrates the database.

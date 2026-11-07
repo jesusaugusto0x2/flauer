@@ -7,7 +7,7 @@ import { DesktopHeader } from "@/components/desktop-header";
 import { PlayIcon } from "@/components/icons";
 import { Loading } from "@/components/loading";
 import { ModeSwitch } from "@/components/mode-switch";
-import { APP_NAME, APP_SUBTITLE } from "@/lib/config";
+import { APP_EYEBROW, APP_NAME, APP_SUBTITLE } from "@/lib/config";
 import { isValidMonth, monthOf, today } from "@/lib/dates";
 import { countByDay, entriesOnDay } from "@/lib/entries";
 import { currentMode } from "@/lib/session";
@@ -17,11 +17,13 @@ export default function Home({ searchParams }: PageProps<"/">) {
     <main>
       {/* Phone header. On desktop, DesktopHeader below takes its place. */}
       <header className="pt-4 text-center lg:hidden">
-        <p className="eyebrow">Diario de poemas</p>
+        <p className="eyebrow">{APP_EYEBROW}</p>
         <h1 className="mt-1 font-hand text-[64px] leading-none font-semibold">
           {APP_NAME}
         </h1>
-        <p className="mt-2 text-[17px] text-secondary italic">{APP_SUBTITLE}</p>
+        <p className="mt-2 text-[17px] text-balance text-secondary italic">
+          {APP_SUBTITLE}
+        </p>
       </header>
       <Suspense fallback={<Loading />}>
         <CalendarHome searchParams={searchParams} />

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { APP_NAME, APP_SUBTITLE } from "@/lib/config";
+import { APP_EYEBROW, APP_NAME, APP_SUBTITLE } from "@/lib/config";
 import type { Mode } from "@/lib/session";
 import { PlayIcon } from "./icons";
 import { ModeSwitch } from "./mode-switch";
@@ -29,7 +29,7 @@ export function DesktopHeader({
   return (
     <header className="mb-8 hidden flex-wrap items-end justify-between gap-x-6 gap-y-3 border-b border-light/18 pb-[18px] lg:flex">
       <div>
-        <p className="eyebrow">Diario de poemas</p>
+        <p className="eyebrow">{APP_EYEBROW}</p>
         <Brand className="font-hand text-[60px] leading-none font-semibold">
           {home ? APP_NAME : <Link href="/">{APP_NAME}</Link>}
         </Brand>

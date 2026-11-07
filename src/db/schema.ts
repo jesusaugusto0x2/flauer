@@ -81,6 +81,26 @@ export const shareLinks = pgTable(
   ],
 );
 
+// Each time a share link opens its item for someone, so the owner gets one email
+// per visit. `visitor` is a keyed hash of the address and browser, never the
+// address itself; `alerted` marks the views that sent (or tried to send) an email.
+export const shareViews = pgTable(
+  "share_views",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    code: text("code")
+      .notNull()
+      .references(() => shareLinks.code, { onDelete: "cascade" }),
+    visitor: text("visitor").notNull(),
+    viewedAt: timestamp("viewed_at", { withTimezone: true }).notNull().defaultNow(),
+    alerted: boolean("alerted").notNull().default(false),
+  },
+  (t) => [
+    index("share_views_visit_idx").on(t.code, t.visitor, t.viewedAt),
+    index("share_views_viewed_at_idx").on(t.viewedAt),
+  ],
+);
+
 // Attempts at the passwords and share codes, used to rate-limit them.
 export const loginAttempts = pgTable("login_attempts", {
   key: text("key").primaryKey(),

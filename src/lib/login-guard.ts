@@ -41,7 +41,8 @@ export function isCorrectReaderPassword(attempt: string): boolean {
   return !!real && samePassword(attempt, real);
 }
 
-async function clientIp() {
+/** The visitor's address, as Vercel reports it. */
+export async function clientIp() {
   const h = await headers();
   return (
     h.get("x-vercel-forwarded-for")?.split(",")[0]?.trim() ||

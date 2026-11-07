@@ -7,7 +7,7 @@ import { Loading } from "@/components/loading";
 import { ModeSwitch } from "@/components/mode-switch";
 import { AddVideo } from "@/components/video-form";
 import { VideoGrid } from "@/components/video-grid";
-import { APP_NAME } from "@/lib/config";
+import { APP_EYEBROW, APP_NAME } from "@/lib/config";
 import { mediumDate, plural, today } from "@/lib/dates";
 import { currentMode } from "@/lib/session";
 import { listVideos } from "@/lib/videos";
@@ -36,7 +36,7 @@ async function Videos() {
       {/* Phone header: the diary's name and the way back to the calendar. */}
       <header className="flex items-center justify-between gap-3 border-b border-light/18 pb-3.5 lg:hidden">
         <div>
-          <p className="eyebrow text-[11px]">Diario de poemas</p>
+          <p className="eyebrow text-[11px]">{APP_EYEBROW}</p>
           <p className="font-hand text-[42px] leading-none font-semibold">{APP_NAME}</p>
         </div>
         <Link href="/" className="pill shrink-0 px-4">

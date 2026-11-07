@@ -14,6 +14,7 @@ import { VideoThumbnail } from "@/components/video-thumbnail";
 import type { Video } from "@/db/schema";
 import { mediumDate, shortDate, tinyDate, weekday } from "@/lib/dates";
 import { currentMode } from "@/lib/session";
+import { noteShareView } from "@/lib/share-alerts";
 import { codeOpens, shareCode } from "@/lib/shares";
 import { siteOrigin } from "@/lib/site";
 import { openUrl, SOURCE_NAME, thumbnailUrl } from "@/lib/video-links";
@@ -44,8 +45,22 @@ async function Watch({ params, searchParams }: PageProps<"/videos/[id]">) {
   const position = `${index + 1} de ${videos.length}`;
   // The reader's password opens every video; a share link (?c=) only this one.
   // Without either, nothing that leads to the video (player, Drive or YouTube
-  // address, still, note) leaves the server.
-  const open = canRead || (await codeOpens(code, { kind: "video", id: video.id }));
+  // address, still, note) leaves the server. When the link opens it for anyone
+  // but the owner, the owner gets an email.
+  const sharedCode =
+    !session && (await codeOpens(code, { kind: "video", id: video.id }))
+      ? (code as string)
+      : null;
+  const open = canRead || sharedCode !== null;
+  if (sharedCode) {
+    await noteShareView({
+      code: sharedCode,
+      kind: "video",
+      title: video.title,
+      date: video.date,
+      path: `/videos/${video.id}`,
+    });
+  }
   const sharing = session && mode === "write";
   const [savedCode, origin] = sharing
     ? await Promise.all([shareCode({ kind: "video", id: video.id }), siteOrigin()])

@@ -1,5 +1,5 @@
 import { ImageResponse } from "next/og";
-import { APP_NAME, APP_SUBTITLE } from "@/lib/config";
+import { APP_EYEBROW, APP_NAME, APP_SUBTITLE } from "@/lib/config";
 
 export const alt = APP_NAME;
 export const size = { width: 1200, height: 630 };
@@ -30,10 +30,19 @@ export default function Image() {
         <circle cx="6" cy="6" r="1.3" fill="#15142a" />
       </svg>
       <div style={{ marginTop: 40, fontSize: 28, letterSpacing: 10, color: "#b9b0c4" }}>
-        DIARIO DE POEMAS
+        {APP_EYEBROW.toUpperCase()}
       </div>
       <div style={{ marginTop: 12, fontSize: 110 }}>{APP_NAME}</div>
-      <div style={{ marginTop: 8, fontSize: 40, color: "#b9b0c4", fontStyle: "italic" }}>
+      <div
+        style={{
+          marginTop: 8,
+          maxWidth: 1000,
+          fontSize: 40,
+          color: "#b9b0c4",
+          fontStyle: "italic",
+          textAlign: "center",
+        }}
+      >
         {APP_SUBTITLE}
       </div>
     </div>,
