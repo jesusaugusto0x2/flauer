@@ -10,6 +10,10 @@ Built with Next.js (App Router, Server Components, Server Actions, Cache Compone
 Postgres, Drizzle ORM, Zod, `jose` and Tailwind CSS. The code is in English; the UI is in
 Spanish.
 
+The fonts, Cormorant Garamond and Caveat, are Google Fonts' own latin files kept in
+`src/app/fonts` with their licenses (SIL Open Font License), so building doesn't download
+anything.
+
 ## Routes
 
 | Route               | What it does                                                                                                       |

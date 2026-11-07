@@ -1,18 +1,30 @@
 import type { Metadata, Viewport } from "next";
-import { Caveat, Cormorant_Garamond } from "next/font/google";
+import localFont from "next/font/local";
 import { APP_DESCRIPTION, APP_NAME } from "@/lib/config";
 import "./globals.css";
 
-const cormorant = Cormorant_Garamond({
+// Google Fonts' own latin files, kept in ./fonts (SIL Open Font License) so the
+// build doesn't have to download them. Cormorant's are variable: one file per style.
+const cormorant = localFont({
   variable: "--font-cormorant",
-  subsets: ["latin"],
-  weight: ["400", "600"],
-  style: ["normal", "italic"],
+  src: [
+    {
+      path: "./fonts/cormorant-garamond-latin.woff2",
+      weight: "400 600",
+      style: "normal",
+    },
+    {
+      path: "./fonts/cormorant-garamond-latin-italic.woff2",
+      weight: "400 600",
+      style: "italic",
+    },
+  ],
+  adjustFontFallback: "Times New Roman",
 });
 
-const caveat = Caveat({
+const caveat = localFont({
   variable: "--font-caveat",
-  subsets: ["latin"],
+  src: "./fonts/caveat-latin.woff2",
   weight: "600",
 });
 
