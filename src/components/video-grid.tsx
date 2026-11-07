@@ -16,7 +16,14 @@ import { VideoThumbnail } from "./video-thumbnail";
  * The videos as a grid of squares, by month, the newest first: two across on
  * phones, as many as fit on desktop. Each one opens its page.
  */
-export function VideoGrid({ videos }: { videos: Video[] }) {
+export function VideoGrid({
+  videos,
+  stills,
+}: {
+  videos: Video[];
+  /** Their own stills, only for whoever may watch them; others see the diary's. */
+  stills: boolean;
+}) {
   const months: { month: string; videos: Video[] }[] = [];
   for (const video of videos) {
     const month = monthOf(video.date);
@@ -41,7 +48,7 @@ export function VideoGrid({ videos }: { videos: Video[] }) {
           <ul className="grid grid-cols-2 gap-x-3 gap-y-5 lg:grid-cols-[repeat(auto-fill,minmax(min(240px,100%),1fr))] lg:gap-x-6 lg:gap-y-8">
             {videos.map((video) => (
               <li key={video.id} className="min-w-0">
-                <VideoCard video={video} />
+                <VideoCard video={video} still={stills} />
               </li>
             ))}
           </ul>
@@ -51,14 +58,14 @@ export function VideoGrid({ videos }: { videos: Video[] }) {
   );
 }
 
-function VideoCard({ video }: { video: Video }) {
+function VideoCard({ video, still }: { video: Video; still: boolean }) {
   return (
     <Link
       href={`/videos/${video.id}`}
       className="group flex min-w-0 flex-col gap-2.5 lg:gap-3"
     >
       <VideoThumbnail
-        src={thumbnailUrl(video)}
+        src={still ? thumbnailUrl(video) : null}
         day={tinyDate(video.date)}
         duration={video.durationSeconds ? formatDuration(video.durationSeconds) : null}
       />

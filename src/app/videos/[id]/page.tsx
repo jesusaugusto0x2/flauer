@@ -5,30 +5,35 @@ import { connection } from "next/server";
 import { Suspense, type ReactNode } from "react";
 import { DesktopHeader } from "@/components/desktop-header";
 import { Loading } from "@/components/loading";
+import { ShareControl } from "@/components/share-control";
 import { TopBar } from "@/components/top-bar";
+import { UnlockForm } from "@/components/unlock-form";
 import { VideoActions } from "@/components/video-actions";
-import { VideoPlayer } from "@/components/video-player";
+import { VideoPlayer, VideoPoster } from "@/components/video-player";
 import { VideoThumbnail } from "@/components/video-thumbnail";
 import type { Video } from "@/db/schema";
 import { mediumDate, shortDate, tinyDate, weekday } from "@/lib/dates";
 import { currentMode } from "@/lib/session";
+import { codeOpens, shareCode } from "@/lib/shares";
+import { siteOrigin } from "@/lib/site";
 import { openUrl, SOURCE_NAME, thumbnailUrl } from "@/lib/video-links";
 import { listVideos } from "@/lib/videos";
 
 export const metadata: Metadata = { title: "Video" };
 
-export default function VideoPage({ params }: PageProps<"/videos/[id]">) {
+export default function VideoPage({ params, searchParams }: PageProps<"/videos/[id]">) {
   return (
     <Suspense fallback={<Loading />}>
-      <Watch params={params} />
+      <Watch params={params} searchParams={searchParams} />
     </Suspense>
   );
 }
 
-async function Watch({ params }: Pick<PageProps<"/videos/[id]">, "params">) {
+async function Watch({ params, searchParams }: PageProps<"/videos/[id]">) {
   await connection();
-  const [{ id }, { session, mode }, videos] = await Promise.all([
+  const [{ id }, { c: code }, { session, mode, canRead }, videos] = await Promise.all([
     params,
+    searchParams,
     currentMode(),
     listVideos(),
   ]);
@@ -37,6 +42,14 @@ async function Watch({ params }: Pick<PageProps<"/videos/[id]">, "params">) {
 
   const video = videos[index];
   const position = `${index + 1} de ${videos.length}`;
+  // The reader's password opens every video; a share link (?c=) only this one.
+  // Without either, nothing that leads to the video (player, Drive or YouTube
+  // address, still, note) leaves the server.
+  const open = canRead || (await codeOpens(code, { kind: "video", id: video.id }));
+  const sharing = session && mode === "write";
+  const [savedCode, origin] = sharing
+    ? await Promise.all([shareCode({ kind: "video", id: video.id }), siteOrigin()])
+    : [null, ""];
 
   return (
     <main>
@@ -58,7 +71,7 @@ async function Watch({ params }: Pick<PageProps<"/videos/[id]">, "params">) {
               : "lg:w-[min(640px,54%)]"
           }`}
         >
-          <VideoPlayer video={video} />
+          {open ? <VideoPlayer video={video} /> : <VideoPoster video={video} />}
         </div>
 
         <div className="flex min-w-0 flex-col gap-2 lg:max-w-[520px] lg:flex-[1_1_380px] lg:gap-3.5 lg:pt-3">
@@ -68,53 +81,76 @@ async function Watch({ params }: Pick<PageProps<"/videos/[id]">, "params">) {
           <h1 className="text-[34px] leading-[1.12] font-semibold text-balance break-words lg:text-[54px] lg:leading-[1.05]">
             {video.title}
           </h1>
-          {video.note && (
+          {!open && (
+            <div className="mt-3 lg:mt-4">
+              <UnlockForm prompt="Este video tiene clave. Escríbela para verlo." />
+            </div>
+          )}
+          {open && video.note && (
             <p className="mt-0.5 text-[19px] leading-[1.55] whitespace-pre-line text-light-soft lg:mt-1.5 lg:text-[23px] lg:leading-[1.6]">
               {video.note}
             </p>
           )}
-          <div className="mt-1 flex flex-wrap items-center gap-2.5 lg:mt-1.5">
-            <a
-              href={openUrl(video)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="pill px-4 text-[15px] lg:px-[18px] lg:text-[16px]"
-            >
-              Abrir en {SOURCE_NAME[video.source]} <span aria-hidden="true">↗</span>
-              <span className="sr-only">(se abre en otra pestaña)</span>
-            </a>
-            {mode === "write" && (
-              <VideoActions id={video.id} sourceName={SOURCE_NAME[video.source]} />
-            )}
-          </div>
+          {open && (
+            <div className="mt-1 flex flex-wrap items-center gap-2.5 lg:mt-1.5">
+              <a
+                href={openUrl(video)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="pill px-4 text-[15px] lg:px-[18px] lg:text-[16px]"
+              >
+                Abrir en {SOURCE_NAME[video.source]} <span aria-hidden="true">↗</span>
+                <span className="sr-only">(se abre en otra pestaña)</span>
+              </a>
+              {mode === "write" && (
+                <VideoActions id={video.id} sourceName={SOURCE_NAME[video.source]} />
+              )}
+            </div>
+          )}
+          {sharing && (
+            <div className="mt-2">
+              <ShareControl
+                target={{ kind: "video", id: video.id }}
+                code={savedCode}
+                origin={origin}
+              />
+            </div>
+          )}
 
-          <div className="mt-4 border-t border-light/18 pt-4 lg:mt-7 lg:pt-5">
-            <p className="mb-3 hidden text-[16px] text-secondary italic lg:block">
-              Video {position}
-            </p>
-            {/* Same order as the list: "Anterior" is newer, "Siguiente" older. */}
-            <nav aria-label="Otros videos" className="grid grid-cols-2 gap-2.5 lg:gap-3">
-              <Neighbor
-                video={videos[index - 1]}
-                label={
-                  <>
-                    <span aria-hidden="true">←</span> Anterior
-                  </>
-                }
-                none="Es el más nuevo"
-              />
-              <Neighbor
-                video={videos[index + 1]}
-                label={
-                  <>
-                    Siguiente <span aria-hidden="true">→</span>
-                  </>
-                }
-                none="Es el más antiguo"
-                end
-              />
-            </nav>
-          </div>
+          {open && (
+            <div className="mt-4 border-t border-light/18 pt-4 lg:mt-7 lg:pt-5">
+              <p className="mb-3 hidden text-[16px] text-secondary italic lg:block">
+                Video {position}
+              </p>
+              {/* Same order as the list: "Anterior" is newer, "Siguiente" older. */}
+              <nav
+                aria-label="Otros videos"
+                className="grid grid-cols-2 gap-2.5 lg:gap-3"
+              >
+                <Neighbor
+                  video={videos[index - 1]}
+                  label={
+                    <>
+                      <span aria-hidden="true">←</span> Anterior
+                    </>
+                  }
+                  none="Es el más nuevo"
+                  stills={canRead}
+                />
+                <Neighbor
+                  video={videos[index + 1]}
+                  label={
+                    <>
+                      Siguiente <span aria-hidden="true">→</span>
+                    </>
+                  }
+                  none="Es el más antiguo"
+                  stills={canRead}
+                  end
+                />
+              </nav>
+            </div>
+          )}
         </div>
       </article>
     </main>
@@ -130,12 +166,15 @@ function Neighbor({
   video,
   label,
   none,
+  stills,
   end = false,
 }: {
   video?: Video;
   label: ReactNode;
   /** Shown when there is no video on that side. */
   none: string;
+  /** Its own still, only for whoever may watch it (a share link opens one video). */
+  stills: boolean;
   /** Phones: aligned to the right, like an arrow pointing on. */
   end?: boolean;
 }) {
@@ -160,7 +199,7 @@ function Neighbor({
     >
       <span className="hidden w-[76px] shrink-0 lg:block">
         <VideoThumbnail
-          src={thumbnailUrl(video)}
+          src={stills ? thumbnailUrl(video) : null}
           day={tinyDate(video.date)}
           size="mini"
         />

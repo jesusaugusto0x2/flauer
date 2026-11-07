@@ -20,6 +20,7 @@ export function DayPanel({
   heading: Heading = "h1",
   backHref,
   desktopOnly = false,
+  canRead,
   className = "",
 }: {
   date: string;
@@ -31,6 +32,8 @@ export function DayPanel({
   backHref?: string;
   /** Hidden on phones (the calendar page shows only the month there). */
   desktopOnly?: boolean;
+  /** May open poems and notes (the owner, or with the reader's password). */
+  canRead: boolean;
   className?: string;
 }) {
   const isToday = date === todayDate;
@@ -97,7 +100,7 @@ export function DayPanel({
         >
           {summaries.map((e) => (
             <li key={e.id}>
-              <EntryCard entry={e} />
+              <EntryCard entry={e} canRead={canRead} />
             </li>
           ))}
         </ul>

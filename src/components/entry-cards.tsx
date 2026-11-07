@@ -120,9 +120,17 @@ const STRETCHED_LINK =
 
 /**
  * Reading mode: a summary that opens the entry's own page. A note is cut at
- * three lines and a song's "why" at two; the page shows them whole.
+ * three lines and a song's "why" at two; the page shows them whole. Without the
+ * reader's password a note shows (and sends) only its first line, like a poem.
  */
-export function EntryCard({ entry }: { entry: EntrySummary }) {
+export function EntryCard({
+  entry,
+  canRead,
+}: {
+  entry: EntrySummary;
+  /** May open its page: the owner, or with the reader's password. */
+  canRead: boolean;
+}) {
   const theme = KIND_THEME[entry.kind];
 
   if (entry.kind === "song") {
@@ -188,11 +196,17 @@ export function EntryCard({ entry }: { entry: EntrySummary }) {
               {entry.title}
             </span>
           )}
-          <span
-            className={`line-clamp-3 text-[18px] leading-normal whitespace-pre-line ${theme.text}`}
-          >
-            {entry.body}
-          </span>
+          {canRead ? (
+            <span
+              className={`line-clamp-3 text-[18px] leading-normal whitespace-pre-line ${theme.text}`}
+            >
+              {entry.body}
+            </span>
+          ) : (
+            <span className={`block truncate text-[18px] leading-normal ${theme.text}`}>
+              {firstLine(entry.body)}
+            </span>
+          )}
         </>
       )}
       <span className={`self-end text-[17px] font-semibold ${theme.accent}`}>

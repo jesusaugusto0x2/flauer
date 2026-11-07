@@ -27,7 +27,7 @@ async function Day({ params }: Pick<PageProps<"/day/[date]">, "params">) {
   if (!isValidDate(date) || date > todayDate) notFound();
 
   const month = monthOf(date);
-  const [{ session, mode }, dayEntries, counts] = await Promise.all([
+  const [{ session, mode, canRead }, dayEntries, counts] = await Promise.all([
     currentMode(),
     entriesOnDay(date),
     countByDay(month),
@@ -61,6 +61,7 @@ async function Day({ params }: Pick<PageProps<"/day/[date]">, "params">) {
           date={date}
           entries={dayEntries}
           mode={mode}
+          canRead={canRead}
           todayDate={todayDate}
           backHref={backHref}
           className="min-w-0 lg:flex-[1_1_420px]"

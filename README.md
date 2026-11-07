@@ -3,7 +3,8 @@
 A personal diary of poems, notes and songs. Every entry belongs to a day; on the calendar,
 each day shows one flower per kind it has: pink for poems, gold for notes, lilac for songs.
 Apart from the calendar, `/videos` keeps a list of videos stored on Google Drive or
-YouTube. Reading is public; only the diary's owner can write.
+YouTube. The calendar, the days and the songs are open to everyone; poems, notes and
+videos open with the reader's password or a share link; only the diary's owner can write.
 
 Built with Next.js (App Router, Server Components, Server Actions, Cache Components), Neon
 Postgres, Drizzle ORM, Zod, `jose` and Tailwind CSS. The code is in English; the UI is in
@@ -21,6 +22,7 @@ Spanish.
 | `/videos`           | Every video as a grid of squares by month, the newest first. In write mode, the form to add one.                   |
 | `/videos/[id]`      | Watch a video, with its date, note and the videos before and after it.                                             |
 | `/videos/[id]/edit` | Edit a video (session required).                                                                                   |
+| `/c/[code]`         | A share link: opens one poem, note or video without the reader's password.                                         |
 | `/login`, `/logout` | Start and end the session. Nothing links to them.                                                                  |
 
 `/poem/[id]`, the old poem URL, redirects to `/entry/[id]`.
@@ -67,6 +69,33 @@ iPhone can block Drive's player inside other sites (its "Prevent Cross-Site Trac
 setting), so every video page also links to the video on Drive or YouTube itself; if a
 video doesn't play on an iPhone, uploading it to YouTube as _Unlisted_ works around it.
 
+## Who sees what
+
+- **The owner** (`/login` with `OWNER_PASSWORD`) reads and writes everything.
+- **With the reader's password** (`READER_PASSWORD`), typed on any locked page, a browser
+  can read every poem, note and video for 7 days. Changing the password closes every pass
+  given for the old one. Without the variable, nothing opens this way.
+- **Everyone else** sees the calendar, the days and the songs. A day's poems show their
+  first verse and notes their first line; their pages, and videos' pages, ask for the
+  password instead of showing them. The server decides before rendering, so a locked page
+  carries none of the text, the note, the player or the Drive / YouTube address, and the
+  video list shows the diary's own pictures instead of the videos' stills.
+
+The password is checked in constant time, with a limit on attempts per address (the
+`login_attempts` table, also used for `/login` and share codes).
+
+**Share links.** In write mode, a poem's, a note's or a video's page has "Compartir": it
+makes a link like `/c/Ab3xYz` (6 characters from 56 that can't be mistaken for one another)
+that opens that item, and only it, without the password. It lasts until "Dejar de
+compartir", and goes away with the item. The `share_links` table keeps one per item. The
+link takes the reader to the item's page with `?c=<code>`, and the page checks that the
+code is the one for that item; lookups count toward a limit per address, so codes can't
+be found by trying them.
+
+The password protects the diary's pages, not the files on Drive: a Drive video has to be
+shared as _Anyone with the link_ for its player to work, so whoever gets that address can
+watch it.
+
 ## Scrolling
 
 Text boxes have a fixed height and scroll on their own, so long texts don't stretch the
@@ -79,11 +108,12 @@ app name, subtitle and optional poem signature live in the same file.
 
 ## Environment variables
 
-| Variable         | Purpose                                                                  |
-| ---------------- | ------------------------------------------------------------------------ |
-| `DATABASE_URL`   | Neon Postgres connection string. On Vercel the Neon integration sets it. |
-| `OWNER_PASSWORD` | Password for `/login`. You choose it.                                    |
-| `AUTH_SECRET`    | Random secret that signs the session cookie. At least 32 characters.     |
+| Variable          | Purpose                                                                                                        |
+| ----------------- | -------------------------------------------------------------------------------------------------------------- |
+| `DATABASE_URL`    | Neon Postgres connection string. On Vercel the Neon integration sets it.                                       |
+| `OWNER_PASSWORD`  | Password for `/login`. You choose it.                                                                          |
+| `READER_PASSWORD` | Password that opens poems, notes and videos to read. Without it, they only open for the owner and share links. |
+| `AUTH_SECRET`     | Random secret that signs the session cookie. At least 32 characters.                                           |
 
 Copy `.env.example` to `.env.local` and fill it in. `.env.local` is git-ignored: never
 commit secrets. To generate `AUTH_SECRET`:
@@ -146,8 +176,8 @@ they share the same database.
 1. Import the repo in Vercel. `vercel.json` pins the framework to Next.js.
 2. In the project: _Storage → Create Database → Neon_ (Marketplace) and connect it to the
    project. This injects `DATABASE_URL`.
-3. In _Settings → Environment Variables_ add `OWNER_PASSWORD` and `AUTH_SECRET` for
-   Production.
+3. In _Settings → Environment Variables_ add `OWNER_PASSWORD`, `READER_PASSWORD` and
+   `AUTH_SECRET` for Production.
 4. Deploy (or redeploy). The production build applies the migrations, then builds the app.
 5. To write, go to `https://your-domain/login`.
 

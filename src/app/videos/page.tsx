@@ -24,7 +24,10 @@ export default function VideosPage() {
 
 async function Videos() {
   await connection();
-  const [{ session, mode }, videos] = await Promise.all([currentMode(), listVideos()]);
+  const [{ session, mode, canRead }, videos] = await Promise.all([
+    currentMode(),
+    listVideos(),
+  ]);
   const writing = mode === "write";
 
   return (
@@ -68,7 +71,7 @@ async function Videos() {
 
       {videos.length > 0 ? (
         <div className="mt-[22px] lg:mt-8">
-          <VideoGrid videos={videos} />
+          <VideoGrid videos={videos} stills={canRead} />
         </div>
       ) : (
         <p className="mt-8 text-[19px] text-secondary italic">

@@ -1,5 +1,7 @@
+import { sql } from "drizzle-orm";
 import {
   boolean,
+  check,
   date,
   index,
   integer,
@@ -57,7 +59,29 @@ export const videos = pgTable(
   (t) => [index("videos_created_idx").on(t.createdAt)],
 );
 
-// Attempts against /login, used to rate-limit it.
+// A short code that opens one poem, note or video without the reader's password.
+// Deleting the entry or video deletes its link; "Dejar de compartir" deletes it too.
+export const shareLinks = pgTable(
+  "share_links",
+  {
+    code: text("code").primaryKey(),
+    entryId: uuid("entry_id")
+      .unique()
+      .references(() => entries.id, { onDelete: "cascade" }),
+    videoId: uuid("video_id")
+      .unique()
+      .references(() => videos.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    check(
+      "share_links_one_target",
+      sql`(${t.entryId} is null) <> (${t.videoId} is null)`,
+    ),
+  ],
+);
+
+// Attempts at the passwords and share codes, used to rate-limit them.
 export const loginAttempts = pgTable("login_attempts", {
   key: text("key").primaryKey(),
   attempts: integer("attempts").notNull().default(0),

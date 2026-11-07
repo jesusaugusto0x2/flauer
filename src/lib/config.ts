@@ -15,3 +15,7 @@ export const SIGNATURE = "";
 export const SESSION_COOKIE = "flauer_session";
 export const MODE_COOKIE = "flauer_mode";
 export const SESSION_DAYS = 30;
+
+/** Set once the reader's password is entered; it opens everything to read. */
+export const READER_COOKIE = "flauer_reader";
+export const READER_DAYS = 7;

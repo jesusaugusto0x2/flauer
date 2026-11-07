@@ -32,7 +32,7 @@ export default function Home({ searchParams }: PageProps<"/">) {
 
 async function CalendarHome({ searchParams }: Pick<PageProps<"/">, "searchParams">) {
   await connection();
-  const [{ month: requested }, { session, mode }] = await Promise.all([
+  const [{ month: requested }, { session, mode, canRead }] = await Promise.all([
     searchParams,
     currentMode(),
   ]);
@@ -74,6 +74,7 @@ async function CalendarHome({ searchParams }: Pick<PageProps<"/">, "searchParams
             date={todayDate}
             entries={todayEntries}
             mode={mode}
+            canRead={canRead}
             todayDate={todayDate}
             heading="h2"
             desktopOnly

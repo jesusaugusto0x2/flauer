@@ -7,18 +7,22 @@ import { DesktopHeader } from "@/components/desktop-header";
 import { KIND_THEME, SpotifyLink } from "@/components/entry-cards";
 import { OutlineFlower } from "@/components/icons";
 import { Loading } from "@/components/loading";
+import { ShareControl } from "@/components/share-control";
 import { SIDE_COLUMN } from "@/components/side-column";
 import { TopBar } from "@/components/top-bar";
+import { UnlockForm } from "@/components/unlock-form";
 import { SIGNATURE } from "@/lib/config";
 import { longDate, shortDate, today, weekday } from "@/lib/dates";
 import { entriesOnDay, getEntry } from "@/lib/entries";
 import { displayTitle, kindLabel } from "@/lib/kinds";
 import { currentMode } from "@/lib/session";
+import { codeOpens, shareCode } from "@/lib/shares";
+import { siteOrigin } from "@/lib/site";
 
-export default function EntryPage({ params }: PageProps<"/entry/[id]">) {
+export default function EntryPage({ params, searchParams }: PageProps<"/entry/[id]">) {
   return (
     <Suspense fallback={<Loading />}>
-      <EntryReader params={params} />
+      <EntryReader params={params} searchParams={searchParams} />
     </Suspense>
   );
 }
@@ -39,6 +43,7 @@ const READER = {
     body: "mt-8 text-[19px] leading-8 lg:mt-[38px] lg:text-[23px] lg:leading-[38px]",
     navLabel: "Poemas de este día",
     next: "Siguiente poema",
+    locked: "Este poema tiene clave. Escríbela para leerlo.",
   },
   note: {
     sheet: "note-paper",
@@ -48,6 +53,7 @@ const READER = {
     body: "mt-5 text-[19px] leading-[1.6] lg:mt-7 lg:text-[21px]",
     navLabel: "Notas de este día",
     next: "Siguiente nota",
+    locked: "Esta nota tiene clave. Escríbela para leerla.",
   },
   song: {
     sheet: "song-paper",
@@ -57,18 +63,31 @@ const READER = {
     body: "mt-5 text-[19px] leading-[1.6] lg:mt-7 lg:text-[21px]",
     navLabel: "Canciones de este día",
     next: "Siguiente canción",
+    // Songs are open to everyone.
+    locked: "",
   },
 } as const;
 
 const NAV_PILL = "pill px-4 lg:px-[18px] lg:text-[18px]";
 
-async function EntryReader({ params }: Pick<PageProps<"/entry/[id]">, "params">) {
+async function EntryReader({ params, searchParams }: PageProps<"/entry/[id]">) {
   await connection();
-  const [{ id }, { session, mode }] = await Promise.all([params, currentMode()]);
+  const [{ id }, { c: code }, { session, mode, canRead }] = await Promise.all([
+    params,
+    searchParams,
+    currentMode(),
+  ]);
   const entry = await getEntry(id);
   if (!entry) notFound();
 
   const kind = entry.kind;
+  // Songs are open. Poems and notes need the reader's password, or this entry's
+  // share link (?c=); without either, nothing of the text leaves the server.
+  const open =
+    kind === "song" ||
+    canRead ||
+    (await codeOpens(code, { kind: "entry", id: entry.id }));
+  const sharing = session && mode === "write" && kind !== "song";
   const look = READER[kind];
   const theme = KIND_THEME[kind];
   const dayEntries = await entriesOnDay(entry.date);
@@ -78,6 +97,9 @@ async function EntryReader({ params }: Pick<PageProps<"/entry/[id]">, "params">)
   const next = sameKind[index + 1];
   const position = `${kindLabel(kind)} ${index + 1} de ${sameKind.length}`;
   const dayHref = `/day/${entry.date}`;
+  const [savedCode, origin] = sharing
+    ? await Promise.all([shareCode({ kind: "entry", id: entry.id }), siteOrigin()])
+    : [null, ""];
 
   return (
     <main>
@@ -126,25 +148,33 @@ async function EntryReader({ params }: Pick<PageProps<"/entry/[id]">, "params">)
             >
               {displayTitle(entry)}
             </h1>
-            {kind === "song" && entry.artist && (
-              <p className={`mt-1 text-[20px] italic lg:text-[24px] ${theme.soft}`}>
-                {entry.artist}
-              </p>
-            )}
-            {entry.body && (
-              <div className={`whitespace-pre-line ${theme.text} ${look.body}`}>
-                {entry.body}
+            {!open ? (
+              <div className="mt-8 lg:mt-[38px]">
+                <UnlockForm prompt={look.locked} tone="paper" />
               </div>
-            )}
-            {kind === "song" && entry.spotifyUrl && (
-              <p className="mt-6 lg:mt-8">
-                <SpotifyLink url={entry.spotifyUrl} name={displayTitle(entry)} />
-              </p>
-            )}
-            {kind === "poem" && SIGNATURE && (
-              <p className="mt-8 text-right font-hand text-[24px] leading-8 font-semibold text-wine lg:mt-[38px] lg:text-[30px] lg:leading-[38px]">
-                {SIGNATURE}
-              </p>
+            ) : (
+              <>
+                {kind === "song" && entry.artist && (
+                  <p className={`mt-1 text-[20px] italic lg:text-[24px] ${theme.soft}`}>
+                    {entry.artist}
+                  </p>
+                )}
+                {entry.body && (
+                  <div className={`whitespace-pre-line ${theme.text} ${look.body}`}>
+                    {entry.body}
+                  </div>
+                )}
+                {kind === "song" && entry.spotifyUrl && (
+                  <p className="mt-6 lg:mt-8">
+                    <SpotifyLink url={entry.spotifyUrl} name={displayTitle(entry)} />
+                  </p>
+                )}
+                {kind === "poem" && SIGNATURE && (
+                  <p className="mt-8 text-right font-hand text-[24px] leading-8 font-semibold text-wine lg:mt-[38px] lg:text-[30px] lg:leading-[38px]">
+                    {SIGNATURE}
+                  </p>
+                )}
+              </>
             )}
           </article>
 
@@ -168,6 +198,14 @@ async function EntryReader({ params }: Pick<PageProps<"/entry/[id]">, "params">)
               </span>
             )}
           </nav>
+
+          {sharing && (
+            <ShareControl
+              target={{ kind: "entry", id: entry.id }}
+              code={savedCode}
+              origin={origin}
+            />
+          )}
         </div>
       </div>
     </main>

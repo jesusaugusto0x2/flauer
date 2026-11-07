@@ -30,7 +30,8 @@ export function VideoThumbnail({
   duration,
   size = "card",
 }: {
-  src: string;
+  /** Its own still; null to show the diary's (to whoever can't watch it). */
+  src: string | null;
   /** "24 oct", written on the diary's picture. */
   day: string;
   /** "1:23", when it's known. */
@@ -40,12 +41,13 @@ export function VideoThumbnail({
   const [failed, setFailed] = useState(false);
   const look = SIZES[size];
   const card = size === "card";
+  const still = failed ? null : src;
 
   return (
     <span
       className={`relative flex aspect-square w-full items-center justify-center overflow-hidden border bg-night-soft ${look.box}`}
     >
-      {failed ? (
+      {!still ? (
         <>
           {card && (
             <>
@@ -69,7 +71,7 @@ export function VideoThumbnail({
         </>
       ) : (
         <Image
-          src={src}
+          src={still}
           alt=""
           fill
           unoptimized
