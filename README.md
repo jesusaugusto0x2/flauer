@@ -99,13 +99,17 @@ be found by trying them.
 
 **Share alerts.** When a share link opens its item for anyone but the logged-in owner, the
 owner gets an email (to `SHARE_ALERT_EMAIL`, sent through [Resend](https://resend.com)): what
-was opened, when, roughly where (Vercel's guess from the address) and on what device, with
-the link to stop sharing. Reloads and views by the same visitor within 30 minutes are one
-visit and send one email; link previews (WhatsApp, iMessage, Telegram…), search engines and
-scripts send none; and there are at most 30 a day. The email goes out after the page is
-sent (`after()`), so it never slows the page down, and a failure only logs. The
-`share_views` table records the views, with a keyed hash of the visitor's address and
-browser instead of the address. Emails come from `avisos@` the domain in
+was opened, when, roughly where (Vercel's guess from the address) and on what device. The
+visit is reported by the page itself once a browser really shows it (`ShareViewBeacon`
+calls the `sharedView` action, which checks the session and the code again): link previews
+and scanners fetch `/c/…` and follow its redirect (Next writes it into the page as a
+`<meta http-equiv="refresh">`) but never run the page, so they send nothing, and a page the
+browser prerenders counts only once it is opened. Reloads and views by the same visitor
+within 30 minutes are one visit and send one email; visitors that call themselves bots
+(WhatsApp, iMessage, Telegram…) send none; and there are at most 30 a day. The email names
+the link's code but doesn't carry the link, so a mail scanner or a stray tap can't count
+as a visit. The `share_views` table records the views, with a keyed hash of the visitor's
+address and browser instead of the address. Emails come from `avisos@` the domain in
 `RESEND_EMAIL_DOMAIN`; if Resend refuses it (a domain not verified yet), they come from
 `onboarding@resend.dev`, which only delivers to the Resend account's own email. Without
 `RESEND_API_KEY` or `SHARE_ALERT_EMAIL`, nothing is sent.

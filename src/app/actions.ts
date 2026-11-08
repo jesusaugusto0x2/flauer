@@ -10,6 +10,7 @@ import {
 } from "@/lib/login-guard";
 import { createEntry, deleteEntry, isValidId, updateEntry } from "@/lib/entries";
 import { createSession, grantReaderPass, hasSession, saveMode } from "@/lib/session";
+import { reportShareView } from "@/lib/share-alerts";
 import { createShare, deleteShare, type ShareTarget } from "@/lib/shares";
 import {
   entrySchema,
@@ -200,6 +201,25 @@ export async function shareItem(
     // Also when the item no longer exists (the link must point at something).
     console.error(e);
     return { error: "No se pudo crear el enlace. Inténtalo de nuevo." };
+  }
+}
+
+/**
+ * A share link's page is being shown in someone's browser (ShareViewBeacon):
+ * the owner gets an email, unless it's the owner. Never answers anything, so it
+ * can't be used to test codes.
+ */
+export async function sharedView(
+  kind: ShareTarget["kind"],
+  id: string,
+  code: string,
+): Promise<void> {
+  if (!SHARE_KINDS.includes(kind) || !isValidId(id) || typeof code !== "string") return;
+  if (await hasSession()) return;
+  try {
+    await reportShareView({ kind, id }, code);
+  } catch (e) {
+    console.error("[share-alert]", e);
   }
 }
 

@@ -6,6 +6,7 @@ import { Suspense, type ReactNode } from "react";
 import { DesktopHeader } from "@/components/desktop-header";
 import { Loading } from "@/components/loading";
 import { ShareControl } from "@/components/share-control";
+import { ShareViewBeacon } from "@/components/share-view-beacon";
 import { TopBar } from "@/components/top-bar";
 import { UnlockForm } from "@/components/unlock-form";
 import { VideoActions } from "@/components/video-actions";
@@ -14,7 +15,6 @@ import { VideoThumbnail } from "@/components/video-thumbnail";
 import type { Video } from "@/db/schema";
 import { mediumDate, shortDate, tinyDate, weekday } from "@/lib/dates";
 import { currentMode } from "@/lib/session";
-import { noteShareView } from "@/lib/share-alerts";
 import { codeOpens, shareCode } from "@/lib/shares";
 import { siteOrigin } from "@/lib/site";
 import { openUrl, SOURCE_NAME, thumbnailUrl } from "@/lib/video-links";
@@ -46,21 +46,13 @@ async function Watch({ params, searchParams }: PageProps<"/videos/[id]">) {
   // The reader's password opens every video; a share link (?c=) only this one.
   // Without either, nothing that leads to the video (player, Drive or YouTube
   // address, still, note) leaves the server. When the link opens it for anyone
-  // but the owner, the owner gets an email.
+  // but the owner, the page tells the server once a browser shows it
+  // (ShareViewBeacon), and the owner gets an email.
   const sharedCode =
     !session && (await codeOpens(code, { kind: "video", id: video.id }))
       ? (code as string)
       : null;
   const open = canRead || sharedCode !== null;
-  if (sharedCode) {
-    await noteShareView({
-      code: sharedCode,
-      kind: "video",
-      title: video.title,
-      date: video.date,
-      path: `/videos/${video.id}`,
-    });
-  }
   const sharing = session && mode === "write";
   const [savedCode, origin] = sharing
     ? await Promise.all([shareCode({ kind: "video", id: video.id }), siteOrigin()])
@@ -168,6 +160,7 @@ async function Watch({ params, searchParams }: PageProps<"/videos/[id]">) {
           )}
         </div>
       </article>
+      {sharedCode && <ShareViewBeacon kind="video" id={video.id} code={sharedCode} />}
     </main>
   );
 }

@@ -8,6 +8,7 @@ import { KIND_THEME, SpotifyLink } from "@/components/entry-cards";
 import { OutlineFlower } from "@/components/icons";
 import { Loading } from "@/components/loading";
 import { ShareControl } from "@/components/share-control";
+import { ShareViewBeacon } from "@/components/share-view-beacon";
 import { SIDE_COLUMN } from "@/components/side-column";
 import { TopBar } from "@/components/top-bar";
 import { UnlockForm } from "@/components/unlock-form";
@@ -16,7 +17,6 @@ import { longDate, shortDate, today, weekday } from "@/lib/dates";
 import { entriesOnDay, getEntry } from "@/lib/entries";
 import { displayTitle, kindLabel } from "@/lib/kinds";
 import { currentMode } from "@/lib/session";
-import { noteShareView } from "@/lib/share-alerts";
 import { codeOpens, shareCode } from "@/lib/shares";
 import { siteOrigin } from "@/lib/site";
 
@@ -84,7 +84,8 @@ async function EntryReader({ params, searchParams }: PageProps<"/entry/[id]">) {
   const kind = entry.kind;
   // Songs are open. Poems and notes need the reader's password, or this entry's
   // share link (?c=); without either, nothing of the text leaves the server.
-  // When the link opens it for anyone but the owner, the owner gets an email.
+  // When the link opens it for anyone but the owner, the page tells the server
+  // once a browser shows it (ShareViewBeacon), and the owner gets an email.
   const sharedCode =
     kind !== "song" &&
     !session &&
@@ -92,15 +93,6 @@ async function EntryReader({ params, searchParams }: PageProps<"/entry/[id]">) {
       ? (code as string)
       : null;
   const open = kind === "song" || canRead || sharedCode !== null;
-  if (sharedCode) {
-    await noteShareView({
-      code: sharedCode,
-      kind,
-      title: entry.title?.trim() || null,
-      date: entry.date,
-      path: `/entry/${entry.id}`,
-    });
-  }
   const sharing = session && mode === "write" && kind !== "song";
   const look = READER[kind];
   const theme = KIND_THEME[kind];
@@ -220,6 +212,7 @@ async function EntryReader({ params, searchParams }: PageProps<"/entry/[id]">) {
               origin={origin}
             />
           )}
+          {sharedCode && <ShareViewBeacon kind="entry" id={entry.id} code={sharedCode} />}
         </div>
       </div>
     </main>
