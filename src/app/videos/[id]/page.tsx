@@ -6,7 +6,7 @@ import { Suspense, type ReactNode } from "react";
 import { DesktopHeader } from "@/components/desktop-header";
 import { Loading } from "@/components/loading";
 import { ShareControl } from "@/components/share-control";
-import { ShareViewBeacon } from "@/components/share-view-beacon";
+import { ShareViewBeacon } from "@/components/visit-beacons";
 import { TopBar } from "@/components/top-bar";
 import { UnlockForm } from "@/components/unlock-form";
 import { VideoActions } from "@/components/video-actions";

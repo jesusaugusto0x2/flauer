@@ -101,6 +101,23 @@ export const shareViews = pgTable(
   ],
 );
 
+// Each time someone without the owner's session looks at a day's page, so the
+// owner gets one email per visit. `visitor` as in share_views.
+export const dayVisits = pgTable(
+  "day_visits",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    date: date("date", { mode: "string" }).notNull(),
+    visitor: text("visitor").notNull(),
+    viewedAt: timestamp("viewed_at", { withTimezone: true }).notNull().defaultNow(),
+    alerted: boolean("alerted").notNull().default(false),
+  },
+  (t) => [
+    index("day_visits_visit_idx").on(t.date, t.visitor, t.viewedAt),
+    index("day_visits_viewed_at_idx").on(t.viewedAt),
+  ],
+);
+
 // Attempts at the passwords and share codes, used to rate-limit them.
 export const loginAttempts = pgTable("login_attempts", {
   key: text("key").primaryKey(),

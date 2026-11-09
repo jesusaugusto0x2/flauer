@@ -7,6 +7,7 @@ import { DesktopHeader } from "@/components/desktop-header";
 import { Loading } from "@/components/loading";
 import { ModeSwitch } from "@/components/mode-switch";
 import { TopBar } from "@/components/top-bar";
+import { DayVisitBeacon } from "@/components/visit-beacons";
 import { APP_NAME } from "@/lib/config";
 import { isValidDate, monthOf, today } from "@/lib/dates";
 import { countByDay, entriesOnDay } from "@/lib/entries";
@@ -67,6 +68,8 @@ async function Day({ params }: Pick<PageProps<"/day/[date]">, "params">) {
           className="min-w-0 lg:flex-[1_1_420px]"
         />
       </div>
+      {/* Anyone but the owner: the owner gets an email about the visit. */}
+      {!session && <DayVisitBeacon date={date} />}
     </main>
   );
 }

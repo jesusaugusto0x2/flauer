@@ -9,8 +9,14 @@ import {
   recordAttempt,
 } from "@/lib/login-guard";
 import { createEntry, deleteEntry, isValidId, updateEntry } from "@/lib/entries";
-import { createSession, grantReaderPass, hasSession, saveMode } from "@/lib/session";
-import { reportShareView } from "@/lib/share-alerts";
+import { isValidDate, today } from "@/lib/dates";
+import {
+  createSession,
+  currentMode,
+  grantReaderPass,
+  hasSession,
+  saveMode,
+} from "@/lib/session";
 import { createShare, deleteShare, type ShareTarget } from "@/lib/shares";
 import {
   entrySchema,
@@ -21,6 +27,7 @@ import {
   type VideoFormState,
 } from "@/lib/validation";
 import { createVideo, deleteVideo, updateVideo } from "@/lib/videos";
+import { reportDayVisit, reportShareView } from "@/lib/visit-alerts";
 
 // Messages returned to the UI are in Spanish.
 const NO_SESSION = "Tu sesión expiró. Vuelve a entrar para guardar.";
@@ -219,7 +226,22 @@ export async function sharedView(
   try {
     await reportShareView({ kind, id }, code);
   } catch (e) {
-    console.error("[share-alert]", e);
+    console.error("[visit-alert]", e);
+  }
+}
+
+/**
+ * A day's page is being shown in the browser of someone without the owner's
+ * session (DayVisitBeacon): the owner gets an email. Never answers anything.
+ */
+export async function dayView(date: string): Promise<void> {
+  if (typeof date !== "string" || !isValidDate(date) || date > today()) return;
+  const { session, canRead } = await currentMode();
+  if (session) return;
+  try {
+    await reportDayVisit(date, canRead);
+  } catch (e) {
+    console.error("[visit-alert]", e);
   }
 }
 

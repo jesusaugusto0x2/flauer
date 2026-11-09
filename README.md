@@ -114,6 +114,15 @@ address and browser instead of the address. Emails come from `avisos@` the domai
 `onboarding@resend.dev`, which only delivers to the Resend account's own email. Without
 `RESEND_API_KEY` or `SHARE_ALERT_EMAIL`, nothing is sent.
 
+**Day alerts.** When someone without the owner's session looks at a day's page
+(`/day/YYYY-MM-DD`), the owner gets an email too: which day and what it holds ("2 poemas y
+1 nota"), when, roughly where, on what device, and whether the visitor has the reader's
+password. It works like share alerts (`DayVisitBeacon` calls the `dayView` action once the
+page is really shown; previews, crawlers and the owner's session never count): one email
+per visitor and day within 30 minutes, at most 40 a day, recorded in the `day_visits`
+table. The calendar itself (`/`) doesn't count, only a day's page. Both kinds of alerts
+live in `src/lib/visit-alerts.ts` and `src/components/visit-beacons.tsx`.
+
 The password protects the diary's pages, not the files on Drive: a Drive video has to be
 shared as _Anyone with the link_ for its player to work, so whoever gets that address can
 watch it.
@@ -139,7 +148,7 @@ file.
 | `AUTH_SECRET`         | Random secret that signs the session cookie. At least 32 characters.                                           |
 | `RESEND_API_KEY`      | Optional. Resend's key, for share alerts. The Resend integration on Vercel sets it.                            |
 | `RESEND_EMAIL_DOMAIN` | Optional. The domain the alerts come from (`avisos@…`). The Resend integration sets it.                        |
-| `SHARE_ALERT_EMAIL`   | Optional. Where share alerts go. Without it (or the key), none are sent.                                       |
+| `SHARE_ALERT_EMAIL`   | Optional. Where share and day alerts go. Without it (or the key), none are sent.                               |
 
 Copy `.env.example` to `.env.local` and fill it in. `.env.local` is git-ignored: never
 commit secrets. To generate `AUTH_SECRET`:
